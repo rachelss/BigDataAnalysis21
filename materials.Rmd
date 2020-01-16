@@ -13,6 +13,5 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ### Day 1 1/23
-[Intro R](https://datacarpentry.org/R-ecology-lesson/00-before-we-start.html)  
-[Intro to data in R](02-starting-with-data.html)  
-Read: Modern Dive ch. 2
+[Why we're here](getting_started.html)  
+Read: Reproducible Research - Ch 1 (Introduction) and Ch 6 (Building Towards a Future)
