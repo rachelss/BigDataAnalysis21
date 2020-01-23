@@ -13,5 +13,5 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ### Day 1 1/23
-[Why we're here](getting_started.html)  
+[Intro slides](https://docs.google.com/presentation/d/1leuqEq3fMsP4chlN1tfmopWeNAF2EsITLIRQk5ssXMU/edit?usp=sharing)  
 Read: Reproducible Research - Ch 1 (Introduction) and Ch 6 (Building Towards a Future)
