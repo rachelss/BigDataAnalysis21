@@ -19,7 +19,7 @@ Day <- c(1:26)
 Date <- c("1/23", "1/28", "1/30", "2/4", "2/6", "2/11", "2/13", "2/18", "2/20", "2/25", "2/27",
           "3/3", "3/5", "3/17", "3/19", "3/24",
           "3/26", "3/31", "4/2", "4/7", "4/9", "4/14", "4/16", "4/21", "4/23", "4/28")
-Topic <- c("Intro","Reproducible research", "Intro R","Data Viz in R","Tidy Data","Tidy Data",
+Topic <- c("Intro", "Intro R and plots","Data manipulation","Tidy Data","Tidy Data","Reproducible research",
            "R Markdown", "Databases", "Shell","Shell","Shell","Shell",
            "Shell", "Shell","HPC","Git", "Git", "Git", 
             "Data in python", "Python", "Python", 

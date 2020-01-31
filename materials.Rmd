@@ -19,3 +19,13 @@ Read: Reproducible Research - Ch 1 (Introduction) and Ch 6 (Building Towards a F
 ### Day 2 1/28
 [Slides](https://docs.google.com/presentation/d/1RgwBEe16PYOgCUgy8cvXUtFe7mG_Y5XuZfvbwrxWZ3c/edit?usp=sharing)  
 [R materials](https://rhodyrstats.github.io/2020-01-15-uri/Oz_fires_DC_remix.html)
+
+### Day 3 1/30
+R: see above  
+Read: [R For Data Science ch. 12.1 - 12.2, 12.7](https://r4ds.had.co.nz/tidy-data.html)  
+Read: [Tidy Data Paper](http://www.jstatsoft.org/v59/i10/paper)  
+Read: [Data Organization in Spreadsheets](https://www.tandfonline.com/doi/full/10.1080/00031305.2017.1375989)
+
+### Day 4 2/4
+Read: [R For Data Science ch. 12.3, 12.6](https://r4ds.had.co.nz/tidy-data.html)  
+Rea: [Data Organization in Spreadsheets](https://www.tandfonline.com/doi/full/10.1080/00031305.2017.1375989)
