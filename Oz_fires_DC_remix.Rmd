@@ -1,5 +1,5 @@
 ---
-title: "Data Carpentry Workshop Remix Jan 15, 2020"
+title: "Intro to R tutorial with Australia Fires Data"
 author: "Rachel Schwartz"
 output: html_document
 ---
@@ -533,15 +533,72 @@ That's because when we work with data in R we typically use "long form".
 That means for everyone combination of variables (year and city),
 we have one observation (mean temp).
 Humans typically like to see data in "wide form".
-That means you (or a colleague) probably collected data like this example
+That means you (or a colleague) probably collected data like this example.
 
 ```{r}
-temps_across_cities <- read_csv()
+temps_across_cities <- read_csv("https://tinyurl.com/Oz-temp-across-cities")
+head(temps_across_cities)
 ```
+
+Seeing the data like this makes comparisons much easier but it's harder to plot or summarize
+in the way we've been doing.
+To work with the data the way we've been doing we need to have just one observation per row.
+We use the `pivot_longer` functions and specify the columns that include our observations.
+In this case it is the columns that are labeled with site names and contain temperature measurements.
+This means we will leave date and temp_type columns
+and make new columns labeled site and temperature.
+We then specify two column names: (1) the names that come from the column names will go into a column named site; (2) the second column will contain the temperature values.
+
+```{r}
+temps_long <- temps_across_cities %>%
+  pivot_longer("PERTH AIRPORT":"MELBOURNE (OLYMPIC PARK)", 
+               names_to = "site", values_to = "temp")
+```
+
+This gives us four columns: date, temp_type, site, and temp, with one observation per row.
+
+Challenge: try this with a rainfall dataset.
+
+```{r}
+rain_across_cities <- read_csv("https://tinyurl.com/Oz-rain-across-cities")
+```
+
+Before you pivot your data notice the errors when it read it.
+If you didn't catch the errors when you read the data,
+take a look at the structure of your data frame by clicking on the arrow next to the 
+variable in the Environment.
+Or use the structure function `str`.
+
+```{r}
+str(rain_across_cities)
+```
+
+There are a couple of ways to deal with this, but we'll fix it by having R check more
+lines before deciding on the column type.
+
+```{r}
+rain_across_cities <- read_csv("https://tinyurl.com/Oz-rain-across-cities",
+                               guess_max = 10000)
+```
+
+Now each column looks like it was read as the correct type.
+Now you can pivot your data.
+
+```{r}
+rain_long <- rain_across_cities %>%
+  pivot_longer(4:10, 
+               names_to = "site", values_to = "temp")
+```
+
+If you want to share your summary table
+you might want to convert to wide format to make it more human readable.
+We use `pivot_wider` and specify that the new column names come from
+the current `city_name` column and the values for all of the new columns
+come from the `mean_max_temp` column.
 
 ```{r}
 mean_max_temp_wide <- mean_max_temp %>%
-  spread(key = city_name,value = mean_max_temp)
+  pivot_wider(names_from = city_name, values_from = mean_max_temp)
 ```
 
 Click on the data in the Environment to see it.
@@ -552,49 +609,100 @@ You can save your new human-readable data.
 write_csv(mean_max_temp_wide, path = "data/mean_max_temp_wide.csv")
 ```
 
-If you get data in wide form and need to convert it to long form to use in R use the `gather` function. This is a bit more complicated as you need to specify the columns you want to gather, the name of the column where those column names go, and the name of the column where all the values go.
+There are a lot of complex ways to rearrange columns using the pivot functions.
+For example, if we want to pivot our rainfall data into wide format,
+we realize that we have multiple pieces of information tied to one observation.
+When we pivot to make the column names as the location we will have multiple
+observations per row.
+You can think of the rows and columns as axes,
+and information like period is now an extra axis that doesn't fit well.
+For example,
+we can only set the column names as either coming from station_code OR city_name OR station name.
+Thus, when we pivot we can specify which columns to keep by listing them.
 
 ```{r}
-mean_max_temp_widetolong <- mean_max_temp_wide %>%
-  gather(-year, key = city_name,value = mean_max_temp)
-
-mean_max_temp_widetolong <- mean_max_temp_wide %>%
-  gather(2:8, key = city_name,value = mean_max_temp)
-
-mean_max_temp_widetolong <- mean_max_temp_wide %>%
-  gather(BRISBANE:SYDNEY, key = city_name,value = mean_max_temp)
+rain_wide <-rainfall %>% pivot_wider(c(year,month,day),
+                         names_from = "station_name", values_from = rainfall)
 ```
+
+We can also aggregate data on the fly.
+Think about what you need to do to generate a data frame
+where each row contains the sum of rainfall for the year at each station.
+When we pivot the data we want to just leave the year.
+However, if we get values from the rainfall column we'll end up with a list of values
+in each cell (i.e. for each year-station_name combinations there's a list of values).
+Therefore, in addition to pivoting in this way we need to specify that we want to sum this list.
+
+```{r}
+rainfall %>% filter(!is.na(rainfall)) %>% pivot_wider(year,
+                         names_from = station_name, 
+                         values_from = rainfall,
+                         values_fn = list(rainfall = sum))
+```
+
+To get around needing multiple pieces of information per observation,
+two variables are sometimes stored in the column name of a wide dataset.
+You can see why we prefer long data.
+This dataset has both city name and station code in each column name.
+This allows for observations in different stations in each city.
+However if we want to get data from all stations in the city we need these two pieces of information separately.
+
+```{r}
+rain_across_stations <- read_csv("https://tinyurl.com/Oz-rain-across-stations",
+                               guess_max = 10000)
+rain_across_stations %>% pivot_longer(
+  cols = Perth_009151:Melbourne_086232,
+  names_to = c("city", "station"), 
+  names_pattern = "(.*)_(.*)",
+  values_to = "rainfall"
+)
+```
+
+This is a bit more elaborate than before.
+First we specify the range of columns to rearrange (this is the same as before).
+This time we want to break each column name in two.
+We now specify a list of columns in the names_to argument.
+Now we need to specify how to break the column name.
+We break the name at the underscore - you can see that in the middle.
+On each side of the underscore we specify the pattern of the name.
+In this case it can be any number of any character.
+We specify the latter with `.` and follow that with the `*` to specify multiple.
+
+For more complex pivoting look at the Pivoting vignette on the tidyr page of the tidyverse website.
 
 ## More data manipulation
 
 Another analysis we might be interested in is whether temperatures for individual months are increasing.
 
-First let's extract the month from the date information. This time we'll do it a bit differently
+Challenge: Examine how the temperature has increased over time in Canberra. Filter for data from Canberra. Get the average max temperature in each month for each year. Pivot year to be viewable.
 
-```{r}
-temperature <- temperature %>%
-  mutate(year = year(date), month = month(date))
-```
+First extract the month from the date information.
+Then filter for just maximum temperatures in Canberra.
+Then generate a summary table including the average temperature for each month-year combination.
+Then pivot this data so that each month is a row and you can view changes in temperature over the years
+by scrolling through columns.
 
-Challenge: Examine how the temperature has increased over time in Canberra. Filter for data from Canberra. Get the average max temperature in each month for each year. Spread year to be viewable.
 ```{r}
 monthly_temps_CAN <- temperature %>%
+  filter(!is.na(temperature)) %>%
+  mutate(year = year(date), month = month(date)) %>%
   filter(city_name == "CANBERRA") %>%
   filter(temp_type == "max") %>%
   group_by(month, year) %>%
-  summarize(avg_temp = mean(temperature, na.rm = T)) %>%
-  spread(year, avg_temp)
+  summarize(avg_temp = mean(temperature)) %>%
+  pivot_wider(names_from = year, values_from = avg_temp)
 head(monthly_temps_CAN)
 
 ```
-
 
 Now we can summarize by month and plot.
 
 ```{r}
 monthly_temps <- temperature %>%
+  filter(!is.na(temperature)) %>%
+  mutate(year = year(date), month = month(date)) %>%
   group_by(month, year) %>%
-  summarize(avg_temp = mean(temperature, na.rm = T)) 
+  summarize(avg_temp = mean(temperature)) 
 
 ggplot(monthly_temps, aes(month, avg_temp, group=year, color=year)) +
   geom_line() + geom_point()
@@ -623,9 +731,11 @@ Note `na.rm=T`.
 
 ```{r}
 monthly_temps_by_period <- temperature %>%
+  filter(!is.na(temperature)) %>%
+  mutate(year = year(date), month = month(date)) %>%
   mutate(time_period = ifelse( year <= 1964, 0, 1)) %>%
   group_by(month, time_period) %>%
-  summarize(avg_temp = mean(temperature, na.rm = T)) 
+  summarize(avg_temp = mean(temperature)) 
 ```
 
 Now we can plot the result.
@@ -657,6 +767,8 @@ Notice the `facet_wrap` function here to automatically create separate plots.
 
 ```{r}
 monthly_temps_by_period <- temperature %>%
+  filter(!is.na(temperature)) %>%
+  mutate(year = year(date), month = month(date)) %>%
   mutate(time_period = ifelse( year <= 1964, 0, 1)) %>%
   group_by(month, time_period, city_name) %>%
   summarize(avg_temp = mean(temperature, na.rm = T)) 
