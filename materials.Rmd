@@ -18,7 +18,7 @@ Read: Reproducible Research - Ch 1 (Introduction) and Ch 6 (Building Towards a F
 
 ### Day 2 1/28
 [Slides](https://docs.google.com/presentation/d/1RgwBEe16PYOgCUgy8cvXUtFe7mG_Y5XuZfvbwrxWZ3c/edit?usp=sharing)  
-[R materials](https://rhodyrstats.github.io/2020-01-15-uri/Oz_fires_DC_remix.html)
+[R materials](Oz_fires_DC_remix.html)
 
 ### Day 3 1/30
 R: see above  
