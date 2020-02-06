@@ -727,7 +727,6 @@ or after 1964 using 0 or 1.
 We use the `ifelse` function to do this.
 Then we take this updated dataframe and group by both month and time period
 and summarize the average temperature for each group.
-Note `na.rm=T`.
 
 ```{r}
 monthly_temps_by_period <- temperature %>%
@@ -780,3 +779,67 @@ ggplot(monthly_temps_by_period, aes(month(month, label = T), avg_temp,
   labs(y = "Average Temperature (°C)",
        x = "Month") 
 ```
+
+## Joining data together
+
+We have separate datasets for rainfall and temperature.
+What if we want to know the relationship between these variables.
+We need to get these data into a single dataframe.
+First think about how the data line up.
+We need to know that KENT (in the temperature data frame) is the same location
+as Adelaide (in the rainfall dataframe).
+
+
+```{r}
+city_convert <- c("Perth","X","Adelaide","Brisbane","Sydney", "Canberra", "Melbourne")
+names(city_convert) <- unique(temperature$city_name)
+temperature <- temperature %>% 
+  mutate(city = recode(city_name,!!!as.list(city_convert)))
+```
+
+We need to think about how our dates don't match (yet).
+We have two measurements for rain in Brisbane so we should probably average those.
+This will give us six cities and one measurement per city.
+
+```{r}
+rain2 <- rainfall %>%
+  filter(!is.na(rainfall)) %>%
+  mutate(date = ymd(paste(year,month,day))) %>%
+  select(city_name,date,rainfall) %>%
+  group_by(city_name,date) %>%
+  summarize(rainfall = mean(rainfall))
+```
+
+Now we can join the datasets together.
+For any given date in any given city we now have temperature and rainfall side-by-side.
+
+```{r}
+rain_plus_temp <- left_join(rain2,
+                            filter(
+                              select(temperature,date,temperature,temp_type,city),
+                              temp_type == "max"),
+          by=c("date",c("city_name" = "city")))
+```
+
+```{r, include=FALSE}
+rain_plus_temp <- mutate(rain_plus_temp, month = month(date),
+                         season = case_when(month > 2 & month < 6 ~ "fall",
+                                            month > 5 & month < 9 ~ "winter",
+                                            month > 8 & month < 12 ~ "spring",
+                                            month == 12 | month < 3 ~ "summer"))
+
+ggplot(rain_plus_temp,aes(temperature,rainfall)) +
+  geom_point() + facet_wrap(~season)
+```
+
+```{r, include=FALSE}
+rain_plus_temp %>% mutate(year = year(date)) %>%
+  group_by(city_name,month,year) %>%
+  summarize(rain = sum(rainfall), temp = mean(temperature,na.rm = TRUE)) %>%
+  ggplot(aes(temp,rain,color=year,group=year)) + geom_point() +
+    geom_smooth(method="lm", se = FALSE)
+
+```
+
+
+
