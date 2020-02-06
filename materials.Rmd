@@ -31,5 +31,6 @@ Read: [R For Data Science ch. 12.3, 12.6](https://r4ds.had.co.nz/tidy-data.html)
 Read: [Data Organization in Spreadsheets](https://www.tandfonline.com/doi/full/10.1080/00031305.2017.1375989)
 
 ### Day 5 2/6
-[Met Museum Data](https://github.com/metmuseum/openaccess)  
-[Best Practices for Google Sheets](https://matthewlincoln.net/2018/03/26/best-practices-for-using-google-sheets-in-your-data-project.html)
+[Met Museum Data (messy example)](https://github.com/metmuseum/openaccess)  
+Read: [Best Practices for Google Sheets](https://matthewlincoln.net/2018/03/26/best-practices-for-using-google-sheets-in-your-data-project.html)  
+[Data issues from class](https://docs.google.com/document/d/1epE3unqsXIsngYSXaGuqolCpQZPpU9SQQcMuXswcEh0/edit?usp=sharing)
