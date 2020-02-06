@@ -25,8 +25,11 @@ Read: Reproducible Research - Ch 1 (Introduction) and Ch 6 (Building Towards a F
 R: see above  
 Read: [R For Data Science ch. 12.1 - 12.2, 12.7](https://r4ds.had.co.nz/tidy-data.html)  
 Read: [Tidy Data Paper](http://www.jstatsoft.org/v59/i10/paper)  
-Read: [Data Organization in Spreadsheets](https://www.tandfonline.com/doi/full/10.1080/00031305.2017.1375989)
 
 ### Day 4 2/4
 Read: [R For Data Science ch. 12.3, 12.6](https://r4ds.had.co.nz/tidy-data.html)  
-Rea: [Data Organization in Spreadsheets](https://www.tandfonline.com/doi/full/10.1080/00031305.2017.1375989)
+Read: [Data Organization in Spreadsheets](https://www.tandfonline.com/doi/full/10.1080/00031305.2017.1375989)
+
+### Day 5 2/6
+[Met Museum Data](https://github.com/metmuseum/openaccess)  
+[Best Practices for Google Sheets](https://matthewlincoln.net/2018/03/26/best-practices-for-using-google-sheets-in-your-data-project.html)
