@@ -789,16 +789,30 @@ First think about how the data line up.
 We need to know that KENT (in the temperature data frame) is the same location
 as Adelaide (in the rainfall dataframe).
 
-
 ```{r}
+unique(temperature$city_name)
+unique(rainfall$city_name)
+temperature <- temperature %>% 
+  mutate(city = recode(city_name,
+                       PERTH = "Perth",
+                       PORT = "NA",
+                       KENT = "Adelaide",
+                       BRISBANE = "Brisbane",
+                       SYDNEY = "Sydney",
+                       CANBERRA = "Canberra",
+                       MELBOURNE = "Melbourne"
+  ))
+
+#alternative method
 city_convert <- c("Perth","X","Adelaide","Brisbane","Sydney", "Canberra", "Melbourne")
+city_convert <- append(unique(rainfall$city_name), "X", after = 1)
 names(city_convert) <- unique(temperature$city_name)
 temperature <- temperature %>% 
-  mutate(city = recode(city_name,!!!as.list(city_convert)))
+  mutate(city = recode(city_name,!!!city_convert))
 ```
 
 We need to think about how our dates don't match (yet).
-We have two measurements for rain in Brisbane so we should probably average those.
+We also have two measurements for rain in Brisbane so we should probably average those.
 This will give us six cities and one measurement per city.
 
 ```{r}
@@ -821,7 +835,9 @@ rain_plus_temp <- left_join(rain2,
           by=c("date",c("city_name" = "city")))
 ```
 
-```{r, include=FALSE}
+We can look for seasonality
+
+```{r}
 rain_plus_temp <- mutate(rain_plus_temp, month = month(date),
                          season = case_when(month > 2 & month < 6 ~ "fall",
                                             month > 5 & month < 9 ~ "winter",
@@ -841,5 +857,84 @@ rain_plus_temp %>% mutate(year = year(date)) %>%
 
 ```
 
+```{r, include=FALSE}
+rainfall %>%
+  filter(rainfall > 0 & year < 2020) %>%
+  group_by(year,station_name) %>%
+  summarize(med_rain = median(rainfall),
+            n=n()) %>%
+  ggplot(aes(year,med_rain, color = station_name)) + geom_line() + 
+    geom_smooth(method = "lm", se=FALSE) + ylim(0,5)
+
+rainfall %>%
+  filter(rainfall > 0 & year < 2020) %>%
+  mutate(decade = floor(year/10)*10) %>% 
+  ggplot(aes(decade,rainfall, group = decade)) + geom_boxplot() + 
+  facet_wrap(~station_name,scales = "free") + ylim(0,25)
+```
+
+## Functions
+
+Up to this point we have been using functions created by other people.
+Having a function allows us to skip manual work or copy-paste for things we
+do repeatedly.
+For example we prefer using the `mean` function to calculating the sum of values and dividing by the number of observations.
+We can write our own functions to repeat particular types of work
+and to ensure that when we repeat work it is repeated in exactly the same way.
+
+Let's say we want to compare fires occuring in Australia with fires in California.
+Perhaps the data collected in California on temperature is in degrees Fahrenheit.
+We could spell out our conversion factor every time we want to convert F to C,
+or we can define a function to make this calculation and call the function as needed.
+
+<p style="color:blue">
+We define fahrenheit_to_celsius by assigning it to the output of function. The list of argument names are contained within parentheses. Next, the body of the function–the statements that are executed when it runs–is contained within curly braces ({}). The statements in the body are indented by two spaces, which makes the code easier to read but does not affect how the code operates. When we call the function, the values we pass to it are assigned to those variables so that we can use them inside the function. Inside the function, we use a return statement to send a result back to whoever asked for it.
+</p>
+
+For more on functions see [the Software Carpentry lesson](https://swcarpentry.github.io/r-novice-inflammation/02-func-R/).
+
+```{r}
+fahrenheit_to_celsius <- function(temp_F) {
+  temp_C <- (temp_F - 32) * 5 / 9
+  return(temp_C)
+}
+```
+
+Notice that the function contains its own variables.
+These are defined purely within the function and cannot be called outside the function.
+
+Before we use this function let's test it on a couple of examples so we know that it works.
+It it good practice to test your function on known cases as well as the strangest or most difficult cases you can think of.
+
+```{r}
+# freezing point of water
+fahrenheit_to_celsius(32)
+```
+
+```{r}
+# boiling point of water
+fahrenheit_to_celsius(212)
+```
+
+Challenge:
+Write a function to convert C to F and test it.
+
+Now we can apply this function to our data.
+```{r}
+tempCtoF <- function(temp_C) {
+  (temp_C * 9/5) + 32
+}
+
+temperature <- mutate(temperature,tempF = tempCtoF(temperature))
+```
+
+Challenge: write a function to convert mm to inches so we can compare rainfall in California and Australia
+
+```{r}
+mm_to_inches <- function(mm){
+  #divide the length value by 25.4
+  mm/25.4
+}
+```
 
 
