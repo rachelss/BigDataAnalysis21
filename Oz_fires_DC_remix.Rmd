@@ -891,7 +891,8 @@ or we can define a function to make this calculation and call the function as ne
 We define fahrenheit_to_celsius by assigning it to the output of function. The list of argument names are contained within parentheses. Next, the body of the function–the statements that are executed when it runs–is contained within curly braces ({}). The statements in the body are indented by two spaces, which makes the code easier to read but does not affect how the code operates. When we call the function, the values we pass to it are assigned to those variables so that we can use them inside the function. Inside the function, we use a return statement to send a result back to whoever asked for it.
 </p>
 
-For more on functions see [the Software Carpentry lesson](https://swcarpentry.github.io/r-novice-inflammation/02-func-R/).
+For more on functions see [Software Carpentry lesson](https://swcarpentry.github.io/r-novice-inflammation/02-func-R/)
+and [another lesson](https://swcarpentry.github.io/r-novice-gapminder/10-functions/).
 
 ```{r}
 fahrenheit_to_celsius <- function(temp_F) {
@@ -916,6 +917,31 @@ fahrenheit_to_celsius(32)
 fahrenheit_to_celsius(212)
 ```
 
+```{r}
+# a list of values
+fahrenheit_to_celsius(c(32, 212))
+```
+
+```{r}
+# this shouldn't work
+fahrenheit_to_celsius(q)
+```
+
+Since you can't give the function anything other than a number
+let's make sure you get a nice error message.
+
+```{r}
+fahrenheit_to_celsius <- function(temp_F) {
+  if (!is.numeric(temp_F)) {
+    stop("You must provide a number or numeric vector.")
+  }
+  temp_C <- (temp_F - 32) * 5 / 9
+  return(temp_C)
+}
+
+fahrenheit_to_celsius(q)
+```
+
 Challenge:
 Write a function to convert C to F and test it.
 
@@ -937,4 +963,4 @@ mm_to_inches <- function(mm){
 }
 ```
 
-
+When you have functions you plan to reuse, I recommend putting them in a separate R script and then using `source` to import those functions for use in your analysis script.

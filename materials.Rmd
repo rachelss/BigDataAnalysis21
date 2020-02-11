@@ -34,3 +34,11 @@ Read: [Data Organization in Spreadsheets](https://www.tandfonline.com/doi/full/1
 [Met Museum Data (messy example)](https://github.com/metmuseum/openaccess)  
 Read: [Best Practices for Google Sheets](https://matthewlincoln.net/2018/03/26/best-practices-for-using-google-sheets-in-your-data-project.html)  
 [Data issues from class](https://docs.google.com/document/d/1epE3unqsXIsngYSXaGuqolCpQZPpU9SQQcMuXswcEh0/edit?usp=sharing)
+
+### Day 6 2/11
+Tutorial: [Joining data](https://datacarpentry.org/R-ecology-lesson/05-r-and-databases.html#complex-database-queries)
+
+### Day 7 2/13
+Read: [R For Data Science ch. 19.1-19.3, 19.5-19.7](https://r4ds.had.co.nz/functions.html)  
+Tutorials: [Software Carpentry lesson 1](https://swcarpentry.github.io/r-novice-inflammation/02-func-R/)
+and [lesson 2](https://swcarpentry.github.io/r-novice-gapminder/10-functions/).
