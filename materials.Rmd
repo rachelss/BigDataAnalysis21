@@ -40,5 +40,6 @@ Tutorial: [Joining data](https://datacarpentry.org/R-ecology-lesson/05-r-and-dat
 
 ### Day 7 2/13
 Read: [R For Data Science ch. 19.1-19.3, 19.5-19.7](https://r4ds.had.co.nz/functions.html)  
-Tutorials: [Software Carpentry lesson 1](https://swcarpentry.github.io/r-novice-inflammation/02-func-R/)
-and [lesson 2](https://swcarpentry.github.io/r-novice-gapminder/10-functions/).
+Function tutorials: [Software Carpentry lesson 1](https://swcarpentry.github.io/r-novice-inflammation/02-func-R/)
+and [lesson 2](https://swcarpentry.github.io/r-novice-gapminder/10-functions/)  
+RMarkdown tutorials: [1](https://kbroman.org/knitr_knutshell/pages/Rmarkdown.html) and [2](https://kbroman.org/datacarpentry_R_2018-06-04/04-rmarkdown.html)
