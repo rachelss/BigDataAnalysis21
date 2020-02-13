@@ -912,7 +912,7 @@ It it good practice to test your function on known cases as well as the stranges
 fahrenheit_to_celsius(32)
 ```
 
-```{r}
+```{r, eval=FALSE}
 # boiling point of water
 fahrenheit_to_celsius(212)
 ```
@@ -922,9 +922,9 @@ fahrenheit_to_celsius(212)
 fahrenheit_to_celsius(c(32, 212))
 ```
 
-```{r}
+```{r, eval=FALSE, error = TRUE}
 # this shouldn't work
-fahrenheit_to_celsius(q)
+#fahrenheit_to_celsius(q)
 ```
 
 Since you can't give the function anything other than a number
@@ -939,7 +939,7 @@ fahrenheit_to_celsius <- function(temp_F) {
   return(temp_C)
 }
 
-fahrenheit_to_celsius(q)
+#fahrenheit_to_celsius(q)
 ```
 
 Challenge:
