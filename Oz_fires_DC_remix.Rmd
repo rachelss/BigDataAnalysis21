@@ -964,3 +964,111 @@ mm_to_inches <- function(mm){
 ```
 
 When you have functions you plan to reuse, I recommend putting them in a separate R script and then using `source` to import those functions for use in your analysis script.
+
+## Mapping functions to data to avoid copy-paste
+
+We want to apply a function repeatedly to different portions of our data.
+For example we can look at whether the average maximum temperature is increasing over
+time, but rather than looking at all data we might want to separate by month.
+For example, are January temperatures increasing? are Feburary temperatures increasing? etc.
+We can look at this with a plot.
+
+```{r}
+monthly_temps  %>%
+  ggplot(aes(year, avg_temp, color = factor(month))) + 
+    geom_point() + geom_smooth(method = "lm", se = FALSE) 
+```
+
+We can calculate a linear regression for temperature as a function of year,
+but not with months separately.
+
+```{r}
+monthly_temps %>% 
+  lm(avg_temp ~ year, data = .) %>% summary() 
+```
+
+This has a very low Rsquared value because so much of the variation is due to differences across months.
+
+```{r}
+monthly_temps  %>%
+  ggplot(aes(year, avg_temp)) + 
+    geom_point() + geom_smooth(method = "lm", se = FALSE) 
+```
+
+However, if we want to get the linear model for each month separately
+we would repeat the same calculation 12 times.
+
+Here's the plot and model for January.
+
+```{r}
+monthly_temps %>% filter(month == 1) %>%
+  ggplot(aes(year, avg_temp)) + geom_point() + geom_smooth(method = "lm", se = FALSE) 
+
+model_Jan <- monthly_temps %>% filter(month == 1) %>%
+  lm(avg_temp ~ year, data = .) %>% summary() 
+
+model_Jan %>% broom::tidy()
+model_Jan$r.squared
+```
+
+Instead of repeating this approach and filtering for different months, we
+can use the `map` family of functions to apply take a function and apply it to data.
+This looks like `map(YOUR_LIST, YOUR_FUNCTION)`.
+Note: when you see `.` it refers to the data being piped in.
+Note 2: `split` takes a vector to split the data by and is a base function that doesn't automatically infer that the variable is a column from the data frame.
+
+```{r}
+models_changing_temp <- monthly_temps %>%
+  split(.$month) %>%
+  map(~lm(avg_temp ~ year, data = .)) %>%
+  map(summary)
+```
+
+The ~ symbol allows us to specify this function as a formula.
+After the ~ it looks like a typical expression, as you might write in a script. 
+Use `.` to refer to the input from the pipe.
+
+`Map` returns a list where each item is the model summary.
+Click on the variable in the environment to take a look.
+This provides a lot of information to sort through.
+We use `map_dbl` to map a request to access the r squared value from the model summary, and set the output to a double value. Note this can return a vector because you know the (single) type of the data. 
+
+```{r}
+models_changing_temp %>% 
+  map_dbl("r.squared")
+```
+Now we use `map_dfr` to map and set the output to a data frame.
+
+```{r}
+models_changing_temp %>% 
+  map_dfr("r.squared")
+```
+
+To get the coefficients of the model we use the `tidy` function from `broom`.
+For one model this looks like:
+
+```{r}
+library(broom)
+models_changing_temp[[1]] %>% 
+  tidy() 
+```
+
+For all 12 models again we use `map`.
+
+```{r}
+models_changing_temp %>% 
+  map_dfr(tidy, .id = 'month') 
+```
+
+`.id` provides a variable with the specified name in the output dataframe based on the index of the input data frame.
+
+We can put the coefficients and the Rsquared in the same data frame as well.
+
+```{r}
+models_changing_temp %>% 
+  map_dfr(tidy, .id = 'month') %>%
+  filter(term == 'year') %>% select(-term) %>%
+  mutate(r_squared = map_dbl(models_changing_temp,"r.squared"))
+```
+
+
