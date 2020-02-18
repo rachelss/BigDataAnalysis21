@@ -985,6 +985,9 @@ but not with months separately.
 ```{r}
 monthly_temps %>% 
   lm(avg_temp ~ year, data = .) %>% summary() 
+
+monthly_temps %>% 
+  lm(avg_temp ~ year+month, data = .) %>% summary() 
 ```
 
 This has a very low Rsquared value because so much of the variation is due to differences across months.
@@ -1015,7 +1018,7 @@ Instead of repeating this approach and filtering for different months, we
 can use the `map` family of functions to apply take a function and apply it to data.
 This looks like `map(YOUR_LIST, YOUR_FUNCTION)`.
 Note: when you see `.` it refers to the data being piped in.
-Note 2: `split` takes a vector to split the data by and is a base function that doesn't automatically infer that the variable is a column from the data frame.
+Note 2: `split` takes a vector to split the data by and is a base function that doesn't automatically infer that the variable is a column from the data
 
 ```{r}
 models_changing_temp <- monthly_temps %>%
