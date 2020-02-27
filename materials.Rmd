@@ -48,3 +48,10 @@ and [lesson 2](https://swcarpentry.github.io/r-novice-gapminder/10-functions/)
 RMarkdown tutorials: [1](https://kbroman.org/knitr_knutshell/pages/Rmarkdown.html) and [2](https://kbroman.org/datacarpentry_R_2018-06-04/04-rmarkdown.html)  
 [Tutorial: Iterate](https://rstudio.cloud/learn/primers)  
 Read: [R For Data Science ch. 21.5, 25.2](https://r4ds.had.co.nz/)  
+
+### Day 9 2/20
+
+
+### Day 10 2/25  
+[Shell materials](shell.html)  
+[Software Carpentry Shell](http://swcarpentry.github.io/shell-novice/)

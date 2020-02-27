@@ -1,0 +1,486 @@
+---
+title: "Shell"
+author: "Rachel Schwartz"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Intro
+
+Read the [Software Carpenty Background](http://swcarpentry.github.io/shell-novice/) and [Intro](http://swcarpentry.github.io/shell-novice/01-intro/index.html).
+
+Just as we wanted to be able to repeat commands automatically and keep track of our process in R using a script, we'd like to be able to do this when we work with files generally.
+In cases where we have many files we need move those files around
+and run analyses on each of them.
+You might be used to doing this point-and-click, but here we'll automate the process.
+
+This material follows the Software Carpentry Shell lessons.
+
+## Basic commands
+
+Before we get to writing scripts we're going to start by
+typing on the command line. 
+We'll do this from the Terminal tab in the lower left.
+
+First, let's list the files in our main folder.
+
+```{sh ls1, eval = FALSE}
+ls
+```
+
+You can also specify the folder you want to list files from.
+
+```{sh lshome, eval = FALSE}
+ls ~/
+```
+
+The ~ specifies your home folder.
+
+Now let's take a look at some data.
+In this case we have more temperature data from
+lots of sites in lots of sampling periods.
+That means we have many files!
+Rather than copying these for each of you I've put them in a shared folder
+on the server so we'll list the contents of that folder.
+To list the contents of a folder you need to know where it is.
+In this case the shared folder is in the same directory as your home folder.
+That means to access it you need to tell the computer
+look in the folder that's "outside" of the current folder
+then look inside the shared folder then look inside the
+data folder, which is named NEON_temp-air-buoy.
+We specify the "outside" folder using .. then add a / then the name of the folder we want to look in.
+
+```{sh ls, eval=FALSE}
+ls ../shared/NEON_temp-air-buoy
+```
+
+Now you see folders inside this folder.
+But we're just listing the files and folders in that folder.
+Let's change directory and move to that folder so we can work
+with those files.
+
+```{sh cd, eval=FALSE}
+cd ../shared/NEON_temp-air-buoy
+```
+
+Challenge: list the folders in this folder.
+
+```{sh}
+ls NEON_temp-air-buoy
+```
+
+Challenge: cd into the first folder and look at all the files.
+
+```{sh c1, eval = FALSE}
+cd NEON.D03.BARC.DP1.20046.001.2019-01.basic.20190424T185418Z/
+ls
+```
+
+```{sh l1, echo = FALSE}
+ls NEON_temp-air-buoy/NEON.D03.BARC.DP1.20046.001.2019-01.basic.20190424T185418Z/
+```
+
+You see several csv files as well as a readme.
+Let's start with the readme so you know what information you might have.
+If you want to see the whole file you can use `cat` to print it out.
+
+```{sh c2, eval = FALSE}
+cat NEON.D03.BARC.DP1.20046.001.readme.20190424T185418Z.txt
+```
+
+This is quite long and hard to read so let's look at it a different way.
+If you use `less` you can view part of the file at a time and scroll around.
+Note: type `q` to get back to your main prompt.
+
+```{sh c3, eval = FALSE}
+less NEON.D03.BARC.DP1.20046.001.readme.20190424T185418Z.txt
+```
+
+```{sh l3, echo = FALSE}
+head NEON_temp-air-buoy/NEON.D03.BARC.DP1.20046.001.2019-01.basic.20190424T185418Z/NEON.D03.BARC.DP1.20046.001.readme.20190424T185418Z.txt
+```
+
+Because we are working within the RStudio IDE you also have the option of looking at file locations in the Files pane in the lower right, and viewing files in the main scripting area.
+In cases where RStudio is not installed on the server you would not have this option.
+
+Now you have a sense that these datasets are air temperature collected every minute.
+We anticipate a lot of data so let's look at the first few lines of a file using `head`.
+
+```{sh c4, eval = FALSE}
+head NEON.D03.BARC.DP1.20046.001.103.100.001.RHbuoy_1min.2019-01.basic.20190424T185418Z.csv
+```
+
+```{sh l4, echo = FALSE}
+head NEON_temp-air-buoy/NEON.D03.BARC.DP1.20046.001.2019-01.basic.20190424T185418Z/NEON.D03.BARC.DP1.20046.001.103.100.001.RHbuoy_1min.2019-01.basic.20190424T185418Z.csv
+```
+
+If all we had wanted to see was the header information we can add a "flag" to the `head` command
+to specify the number of lines to view.
+
+```{sh c5, eval = FALSE}
+head -1 NEON.D03.BARC.DP1.20046.001.103.100.001.RHbuoy_1min.2019-01.basic.20190424T185418Z.csv
+```
+
+```{sh l5, echo = FALSE}
+head -1 NEON_temp-air-buoy/NEON.D03.BARC.DP1.20046.001.2019-01.basic.20190424T185418Z/NEON.D03.BARC.DP1.20046.001.103.100.001.RHbuoy_1min.2019-01.basic.20190424T185418Z.csv
+```
+
+We can also see the overall number of lines (and words) in the file using `wc` (for word count).
+
+```{sh c6, eval = FALSE}
+wc NEON.D03.BARC.DP1.20046.001.103.100.001.RHbuoy_1min.2019-01.basic.20190424T185418Z.csv
+```
+
+```{sh l6, echo = FALSE}
+wc NEON_temp-air-buoy/NEON.D03.BARC.DP1.20046.001.2019-01.basic.20190424T185418Z/NEON.D03.BARC.DP1.20046.001.103.100.001.RHbuoy_1min.2019-01.basic.20190424T185418Z.csv
+```
+
+If we just want line count we use the `l` flag.
+
+```{sh c7, eval = FALSE}
+wc -l NEON.D03.BARC.DP1.20046.001.103.100.001.RHbuoy_1min.2019-01.basic.20190424T185418Z.csv
+```
+
+```{sh l7, echo = FALSE}
+wc -l NEON_temp-air-buoy/NEON.D03.BARC.DP1.20046.001.2019-01.basic.20190424T185418Z/NEON.D03.BARC.DP1.20046.001.103.100.001.RHbuoy_1min.2019-01.basic.20190424T185418Z.csv
+```
+
+If you want to know more about the `wc` command check the manual (`man`).
+
+```{sh man, eval = FALSE}
+man wc
+```
+
+Go back to your home folder now.
+
+```{sh c8, eval = FALSE}
+cd ~
+```
+
+Let's make a new folder to put our results from this analysis using `mkdir` which means make directory.
+
+```{sh c9, eval = FALSE}
+mkdir NEON_buoy_temp_results
+```
+
+View the files in your current folder to see that this folder has been created.
+
+```{sh c10, eval = FALSE}
+ls
+```
+
+Now `cd` into this folder.
+
+Now let's make a new file - in this case a readme for this folder.
+There are text editors built in to your terminal.
+We'll use `nano`.
+
+```{sh c11, eval = FALSE}
+nano readme
+```
+
+You can type some text here.
+At the bottom of the screen are the commands to use nano.
+To save and exit use control-X.
+Now view your file in the ways we have discussed previously.
+
+Notice your file extensions.
+We have used .csv and .R and .Rmd files previously.
+The extension allows the computer to automatically infer the type of file.
+
+Let's rename our readme as readme.txt.
+There's no rename command so we actually move the file to the new name using the move command `mv`.
+We specify first the old name then the new name.
+
+```{sh c12, eval = FALSE}
+mv readme readme.txt
+```
+
+You need to be careful with the move command as if you move a file to a location that exists
+the old file will overwrite the new file and there is no way to recover.
+
+Make a new file with some text.
+List the files in the folder. 
+Rename the new file readme.txt.
+List the files in the folder. 
+You can see how the original readme file has been overwritten and permanently erased.
+
+You can also copy files from location to location or make a copy in the same folder.
+Make a copy of the readme file using `cp`.
+As with `mv` give the source and destination.
+
+```{sh c13, eval = FALSE}
+cp readme.txt readme
+```
+
+Now view the contents of your folder.
+
+Now copy a NEON file from the shared folder to your project folder.
+You will need to give the path relative to your current folder to access the file.
+If you want to use the same name you don't need to specify the name.
+If you want to use the current folder as the destination just put `.`
+
+```{sh c14, eval = FALSE}
+cp ../../shared/NEON_temp-air-buoy/NEON.D03.BARC.DP1.20046.001.2019-01.basic.20190424T185418Z/NEON.D03.BARC.DP1.20046.001.103.100.001.RHbuoy_1min.2019-01.basic.20190424T185418Z.csv .
+```
+
+The `cp` command takes a source file and a destination.
+You can also copy multiple files by listing them all prior to the destination folder.
+Keep in mind that in this case the destination must be a folder as multiple files can't have a single
+file as a destination.
+Try this out with some of the NEON files.
+
+Now let's copy the whole folder.
+Before we do this let's delete the individual files we copied (so we don't duplicate anything).
+Before you remove a file make sure you want to do this.
+Deleted files can't be recovered.
+
+```{sh c15, eval = FALSE}
+rm NEON.D03.BARC.DP1.20046.001.103.100.001.RHbuoy_1min.2019-01.basic.20190424T185418Z.csv
+```
+
+To copy a whole folder you can still use `cp` but to include all of its contents you need to copy files in the folder recursively using `-r`.
+
+```{sh c16, eval = FALSE}
+cp -r ../../shared/NEON_temp-air-buoy/NEON.D03.BARC.DP1.20046.001.2019-01.basic.20190424T185418Z/ .
+```
+
+Now list the contents of your current folder and of the newly copied folder.
+
+Let's copy more files for practice.
+What if you want to copy all the pdf files to your folder.
+You could list them all individually, but that takes a lot of writing and you could miss some.
+Consider the general pattern of what we want to do:
+we want to copy a file if it has any set of characters followed by pdf.
+We generalize "any set of characters" using *.
+
+```{sh c17, eval = FALSE}
+cp *pdf .
+```
+
+Depending on what files are in the folder we might need to be more specific.
+For example you could copy all files that start with NEON and end in pdf.
+
+```{sh c18, eval = FALSE}
+cp NEON*pdf .
+```
+
+Or even copy files that end in A-or-B-dot-pdf
+
+```{sh c18b, eval = FALSE}
+cp *[AB].pdf .
+```
+
+Note that when the shell sees a wildcard, it expands the wildcard to create a list of matching filenames before running the command that was asked for. So the previous command is the same as 
+
+```{sh c19, eval = FALSE}
+cp NEON.DOC.000783vA.pdf NEON.DOC.001113vA.pdf NEON.DOC.001152vA.pdf NEON.DOC.004613vB.pdf NEON.DOC.011081vB.pdf .
+```
+
+In some cases you want to make sure you are doing the right thing before you run the command.
+With wildcards you might be confused as to how the shell is doing the expansion.
+In this case you can print out the full command by "echoing" it.
+
+```{sh c19b, eval = FALSE}
+echo cp ../shared/NEON*/*[AB].pdf .
+```
+
+## Pipes and filters
+
+As we did in R, we can pipe the output of one cammand directly to the next command.
+First let's look at output step-by-step.
+
+Get the line counts for the csv files in the folder of data we've been working with.
+
+```{sh 20, eval = FALSE}
+wc -l *csv
+```
+
+Now let's write the output to a file
+
+```{sh 20b, eval = FALSE}
+wc -l *csv > ~/NEON_temp/csv_line_counts.txt
+```
+
+Now let's sort this list by the file lengths.
+
+```{sh 20c, eval = FALSE}
+sort csv_line_counts.txt
+```
+
+If this doesn't sort correctly, the sort function may be looking at each character one
+at a time rather than viewing the whole number.
+To correct this use the `n` flag to indicate sorting by number.
+
+```{sh 20d, eval = FALSE}
+sort -n csv_line_counts.txt
+```
+
+Now we could save this to an output file as well.
+
+```{sh 20d2, eval = FALSE}
+sort -n csv_line_counts.txt > ~/NEON_temp/csv_line_counts_sorted.txt
+```
+
+Instead of doing this in two steps let's pipe the output of `wc` directly to `sort`.
+
+```{sh 20e, eval = FALSE}
+wc -l *csv | sort -n > ~/NEON_temp/csv_line_counts_sorted.txt
+```
+
+Now if you only want one column you can access that with the `cut` command.
+Cut has flags to denote which columns (fields) you'd like to include (-f)
+and the character you'd like to separate (delimit) the columns by (-d).
+Let's try getting just the first column of date-time in our data.
+Remember this is a large file so be sure to pipe to head to avoid outputting too much information.
+
+```{sh 21, eval = FALSE}
+cut -f 1 -d ',' NEON.D03.BARC.DP1.20046.001.103.100.001.RHbuoy_1min.2019-01.basic.20190424T185418Z.csv | head
+```
+
+Challenge: In the shared folder is a file named `ena_results.txt`.
+This file contains some information about available data in a database.
+You don't need to worry about the data, but your goal is to determine the number of 
+samples in the folder, the number of species (found in the scientific_name column),
+and the number of genera (that's the first half of the scientific_name column, which consists
+of genus and species names).
+
+```{sh 22, eval = FALSE}
+wc -l ena_results.txt
+cut -f 6 ena_results.txt | sort -u | wc -l
+cut -f 6 ena_results.txt | sort -u | cut -f 1 -d ' ' | sort -u | wc -l
+```
+
+If we had wanted to get a tally of the number of each species we can do that using the `uniq` (unique)
+function with -c.
+
+```{sh 22b, eval = FALSE}
+cut -f 6 ena_results.txt | sort | uniq -c
+```
+
+## Loops
+
+Our larger goal is to be able to analyze each data file in each folder.
+There are 18 folders so you don't want to run your command on each one separately.
+Instead we'll loop through the files.
+Bash follows the syntax below.
+
+<p style="color:blue">
+When the shell sees the keyword for, it knows to repeat a command (or group of commands) once for each item in a list. Each time the loop runs (called an iteration), an item in the list is assigned in sequence to the variable, and the commands inside the loop are executed, before moving on to the next item in the list. Inside the loop, we call for the variable’s value by putting `$` in front of it. The `$` tells the shell interpreter to treat the variable as a variable name and substitute its value in its place, rather than treat it as text or an external command.
+</p>
+
+```{sh 23, eval = FALSE}
+for thing in list_of_things
+do
+    operation_using $thing    # Indentation within the loop is not required, but aids legibility
+done
+```
+
+Let's work with a simple example first.
+This will print the first line of each file.
+
+<p style="color:blue">
+In this example, the list is all filenames ending in csv. 
+Remember that the shell expands the wildcard first, which means you have a specific list to loop through.
+Each time the loop iterates, it will assign a file name to the variable filename and run the head command. The first time through the loop, `$filename` is the name of the first file. The interpreter runs the command head on this file. For the second iteration, `$filename` is the name of the second file. This time, the shell runs head on this file. When the end of the list is reached, the shell exits the for loop.
+</p>
+
+```{sh 24, eval = FALSE}
+for filename in *csv
+do
+    head -1 $filename
+done
+```
+
+<p style="color:blue">
+Notice that the shell prompt changes from `$` to `>` and back again as we were typing in our loop. The second prompt, is different to remind us that we haven’t finished typing a complete command yet.
+Here we see > being used a shell prompt, whereas > is also used to redirect output. Similarly, `$` is used as a shell prompt, but, as we saw earlier, it is also used to ask the shell to get the value of a variable. If the shell prints > or `$` then it expects you to type something, and the symbol is a prompt. If you type > or `$` yourself, it is an instruction from you that the shell should redirect output or get the value of a variable.
+</p>
+
+<p style="color:blue">
+When using variables it is also possible to put the names into curly braces to clearly delimit the variable name: `$filename` is equivalent to `${filename}`, but is different from `${file}name`. You may find this notation in other people’s programs.
+We have called the variable in this loop filename in order to make its purpose clearer to human readers. The shell itself doesn’t care what the variable is called, but you should think of variable names that will be clear to you or another reader.
+</p>
+
+Challenge: compare the output of the loop above to the following
+
+```{sh 24b, eval = FALSE}
+for filename in *csv
+do
+    head -1 ${filename} *csv
+done
+```
+
+You might notice that if you hit the up arrow to repeat a loop the command is compressed into one line. To decipher where the line breaks should be look for the semi-colons.
+
+Challenge: Think about the following loop. What do you expect it to do?
+Now run it and see if the result matches your expectation.
+
+```{sh 25, eval = FALSE}
+for filename in *csv
+do
+    echo $filename
+    head -1 $filename > ~/NEON_temp/csv_headers.csv
+done
+```
+
+Note that each time you run the loop you overwrite the file.
+`>>` appends to a file, rather than overwriting it with the redirected output from a command.
+
+```{sh 25b, eval = FALSE}
+for filename in *csv
+do
+    echo $filename
+    head -1 $filename >> ~/NEON_temp/csv_headers.csv
+done
+```
+
+Loops are particularly useful when trying to rename files.
+Challenge: what do you think the following would do.
+
+```{sh 25c, eval = FALSE}
+cp *csv original*csv
+```
+
+We assume that the person implementing this command wants to
+have two copies of their files - one they are working with and one marked original.
+This is great practice if you are thinking about modifying files.
+However, here the wildcard expansion means that the shell thinks you are trying to 
+copy the list of csv files (expanded) to "original*csv".
+Remember it can't find a file of this name so there's no expansion and it will be treated as the destination.
+
+Instead, we can use a loop:
+
+```{sh 26, eval = FALSE}
+for filename in *csv
+do
+    echo $filename
+    cp $filename original_$filename
+done
+```
+
+Before we run this let's see how the commands will be run.
+
+```{sh 26b, eval = FALSE}
+for filename in *csv
+do
+    echo $filename
+    echo cp $filename original_$filename
+done
+```
+
+Now let's go back to our original problem.
+You need to
+1. Copy the csv files for 1 minute air temperature into a folder in your directory
+2. Run the 30-minute-averaging procedure on each file. (The command to run the script is in the first lines of the file)
+
+```{sh 27, eval = FALSE}
+for filename in *csv
+do
+    echo $filename
+    Rscript 30min_avg_neon.R $filename
+done
+```
