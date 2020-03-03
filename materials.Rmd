@@ -66,8 +66,10 @@ Read: Buffalo ch. 3, (2nd part) 7 (1st part), 12
 Read: [Janssens](https://www.datascienceatthecommandline.com/) ch. 4.0-4.2.1 and 4.2.4-4.2.5
 
 ### Day 13 3/5
+[Software Carpentry Shell Extras](https://carpentries-incubator.github.io/shell-extras/)  
 Read: [Janssens](https://www.datascienceatthecommandline.com/) ch. 4.2.2  
 Read: Buffalo ch. 12 (1st part)
 
 ### Day 14 3/17
+[Sed and Awk](https://neurohackweek.github.io/advancedunix/01-first-part/)  
 Read: Buffalo 7 (2nd part), 12 (2nd part)
