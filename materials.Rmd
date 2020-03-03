@@ -55,3 +55,19 @@ Read: [R For Data Science ch. 21.5, 25.2](https://r4ds.had.co.nz/)
 ### Day 10 2/25  
 [Shell materials](shell.html)  
 [Software Carpentry Shell](http://swcarpentry.github.io/shell-novice/)
+Read: [Janssens](https://www.datascienceatthecommandline.com/) Welcome, Preface, ch. 1.0-1.5, 2.3.1-2.3.2
+
+### Day 11 2/27
+Read: [Janssens](https://www.datascienceatthecommandline.com/) ch. 5.2
+Read: Buffalo ch. 2, 3 (1st part)
+
+### Day 12 3/3
+Read: Buffalo ch. 3, (2nd part) 7 (1st part), 12
+Read: [Janssens](https://www.datascienceatthecommandline.com/) ch. 4.0-4.2.1 and 4.2.4-4.2.5
+
+### Day 13 3/5
+Read: [Janssens](https://www.datascienceatthecommandline.com/) ch. 4.2.2-
+Read: Buffalo ch. 12 (1st part)
+
+### Day 14 3/17
+Read: Buffalo 7 (2nd part), 12 (2nd part)

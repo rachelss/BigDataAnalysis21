@@ -623,7 +623,7 @@ ls</code></pre>
 </div>
 <div id="pipes-and-filters" class="section level2">
 <h2>Pipes and filters</h2>
-<p>As we did in R, we can pipe the output of one cammand directly to the next command. First let’s look at output step-by-step.</p>
+<p>As we did in R, we can pipe the output of one command directly to the next command. First let’s look at output step-by-step.</p>
 <p>Get the line counts for the csv files in the folder of data we’ve been working with.</p>
 <pre class="sh"><code>wc -l *csv</code></pre>
 <p>Now let’s write the output to a file</p>
@@ -708,6 +708,147 @@ do
     echo $filename
     Rscript 30min_avg_neon.R $filename
 done</code></pre>
+</div>
+<div id="scripts" class="section level2">
+<h2>Scripts</h2>
+<p>To preserve the code and make it reproducible, copy it into a script. Inside the terminal you can use <code>nano</code> or if you’re using RStudio server you can make a new file in the script window and paste your code there. Save the script with a <code>.sh</code> extension to indicate that it is a shell script. Now save the file and exit nano if necessary. Run the shell script by typing</p>
+<pre class="sh"><code>bash 30min_avg_neon.sh</code></pre>
+<p>To help future readers of this script know what it does and how to run it add some comments at the top.</p>
+<pre class="sh"><code># Run RScript to get 30min averages for neon data for all csvs
+# Usage: bash 30min_avg_neon.sh</code></pre>
+<p>This works, but every time we want to change the list of files we’re analyzing we need to change the script. Alternatively, we can specify arguments on the command line. We can then pass these arguments to the script. Let’s start with a simple example. Write a script to print the 10th line of the first csv file.</p>
+<pre class="sh"><code># Print the 10th line of the file.
+# Usage: bash printline10.sh
+
+head -10 NEON.D03.BARC.DP1.20046.001.103.100.001.RHbuoy_1min.2019-01.basic.20190424T185418Z.csv | tail -1</code></pre>
+<p>Now let’s change this so we can specify the name of the file on the command line rather than opening the file every time. In your text editor replace the file name with the special variable <code>$1</code>. Inside a shell script, $1 means ‘the first argument on the command line’. Note that you should put $1 with double-quotes in case the filename happens to contain any spaces.</p>
+<pre class="sh"><code># Print the 10th line of the file.
+# Usage: bash printline10.sh
+
+head -10 &quot;$1&quot; | tail -1</code></pre>
+<p>We can now run our script like this:</p>
+<pre class="sh"><code>bash printline10.sh NEON.D03.BARC.DP1.20046.001.103.100.001.RHbuoy_1min.2019-01.basic.20190424T185418Z.csv</code></pre>
+<p>Or like this:</p>
+<pre class="sh"><code>bash printline10.sh NEON.D03.BARC.DP1.20046.001.103.100.001.RHbuoy_1min.2019-02.basic.20190418T193559Z.csv</code></pre>
+<p>If we want to pick a different line to print we currently need to edit the file. Let’s fix that by using the special variable <code>$2</code> for the number of the lines to be passed to head:</p>
+<pre class="sh"><code># Print a specified line of a file.
+# Usage: bash printline10.sh [filename] [line to print]
+
+head -&quot;$2&quot; &quot;$1&quot; | tail -1</code></pre>
+<p>Now we run the script as</p>
+<pre class="sh"><code>mv printline10.sh printline.sh
+bash printline.sh NEON.D03.BARC.DP1.20046.001.103.100.001.RHbuoy_1min.2019-02.basic.20190418T193559Z.csv 10</code></pre>
+<p>Note that you should change the file name, description of what it does, and usage.</p>
+<p>Now let’s go back to our original script to loop through our csv files and calculate 30 minute averages. If we want to specify the list of files on the command line we can’t use <code>$1</code>, <code>$2</code>, and so on because we don’t know how many files there are. Instead, we use the special variable <code>$@</code>, which means, ‘All of the command-line arguments to the shell script’. We also should put <code>$@</code> inside double-quotes to handle the case of arguments containing spaces. Remember that when we put <code>*csv</code> as a command line argument the wildcard is expanded before passing arguments to the script so you are passing all the file names individually, not the single argument. If you want to pass ‘<em>csv’ literally without expanding it we need to enclose it in single quote marks. The variable <code>$1</code> will then be ’</em>csv’ and can be expanded within the script.</p>
+<pre class="sh"><code># Run RScript to get 30min averages for neon data for all csvs
+# Usage: bash 30min_avg_neon.sh [filenames]
+
+for filename in &quot;$@&quot;
+do
+    echo $filename
+    Rscript 30min_avg_neon.R $filename
+done</code></pre>
+<pre class="sh"><code>bash 30min_avg_neon.sh *csv</code></pre>
+<pre class="sh"><code>bash 30min_avg_neon.sh NEON.D03.BARC.DP1.20046.001.2019-02.basic.20190418T193559Z/*csv</code></pre>
+</div>
+<div id="finding-things" class="section level2">
+<h2>Finding things</h2>
+<div id="finding-things-in-files" class="section level3">
+<h3>Finding things in files</h3>
+<p>We have downloaded data for a bunch of different sites. The readme file in each folder provides the latitude and longitude of each site. If we wanted to put this information into a single metadata spreadsheet to work with we could open each file and copy-paste the coordinates. Or we can ask the computer to do the searching for us.</p>
+<p><code>grep</code> finds and prints lines in files that match a pattern. grep is a contraction of ‘global/regular expression/print’. If our files we are interested in finding lines containing “Geographic coordinates” and printing those to the screen or an output file. To use <code>grep</code> type <code>grep</code>, then the pattern we’re searching for and finally the name of the file (or files) we’re searching in.</p>
+<pre class="sh"><code>grep Geographic */*readme*</code></pre>
+<p>The output is the line(s) in each file that contain the search term. By default, grep searches for a pattern in a case-sensitive way. Use the option -i to make the search case-insensitive. In addition, the search pattern does not have to form a complete word, as we will see in the next example.</p>
+<pre class="sh"><code>grep &quot;Geo&quot; */*readme*</code></pre>
+<p>To restrict matches to lines containing the search term as a complete work, we can give grep with the -w option. This will limit matches to word boundaries, which doesn’t match anything in this example.</p>
+<p>If you want to search for a phrase rather than a single word, put the phrase in quotes.</p>
+<pre class="sh"><code>grep &quot;Geographic coordinates&quot; */*readme*</code></pre>
+<p>grep’s real power comes from the fact that search patterns can include wildcards (termed regular expressions). Let’s say we want to find measurements on April 20, 2019 at 1AM. First we tell grep to anchor its search at the beginning of the line with ^. Then we want a quote, but we’ve been using quote indicate what to search for so to avoid ending our search term we need to indicate that we’re search for this character by escaping it. The backslash –  – escapes a special character, which means that character gets interpreted literally (and is therefore no longer special). Now we can enter the rest of our search string.</p>
+<pre class="sh"><code>grep &quot;^\&quot;2019-04-20T01:00&quot; */*csv</code></pre>
+<p>If we want to search for measurements on April 20 OR 21, 2019 at 1AM we need to indicate either a 0 or 1. Brackets – […] – enclose a set of characters to match in a single regular expression.</p>
+<pre class="sh"><code>grep &quot;^\&quot;2019-04-2[01]T01:00&quot; */*csv</code></pre>
+<p>[0-9] matches any single digit. We can use this to get measurements any time from April 20-29, 2019 at 1AM.</p>
+<pre class="sh"><code>grep &quot;^\&quot;2019-04-2[0-9]T01:00&quot; */*csv</code></pre>
+<p>Parentheses enclose longer sets of alternative strings and are used with the or operator “|”. Here we get measurements any time on April 1, 2019 or 2020 at 1AM.</p>
+<pre class="sh"><code>grep -E &quot;^\&quot;20(19|20)-04-01T01:00&quot; */*csv</code></pre>
+<p>Note that as we get more complicated regular expressions we add the E flag to support this.</p>
+<p>Now you try. Search for temperature measurements at other times. And of course try <code>man grep</code> to view other flags and options for searching.</p>
+</div>
+<div id="finding-files" class="section level3">
+<h3>Finding files</h3>
+<p style="color:blue">
+While grep finds lines in files, the find command finds files themselves. For our first command, let’s run <code>find .</code>
+</p>
+<pre class="sh"><code>find .</code></pre>
+<p style="color:blue">
+As always, the . on its own means the current working directory, which is where we want our search to start. <code>find</code>’s output is the names of every file and directory under the current working directory.
+</p>
+<p>We can specify that we want to find specifically files or directories using the <code>-type</code> flag.</p>
+<pre class="sh"><code>find . -type f</code></pre>
+<pre class="sh"><code>find . -type d</code></pre>
+<p>Now let’s try matching by name:</p>
+<pre class="sh"><code>find . -name *.txt</code></pre>
+<p>Although this seems to work okay, remember that the command line generally expands a wildcard before running a command. To ensure that we are finding ’*.txt’ not the txt files in the current directory only, we should put the search term in quotes.</p>
+<pre class="sh"><code>find . -name &#39;*.txt&#39;</code></pre>
+<p>If you wanted the line counts of all these files you might try to pipe this output to <code>wc</code>.</p>
+<pre class="sh"><code>find . -name &#39;*.txt&#39; | wc -l</code></pre>
+<p>However, this counts the number of lines in the output not in each file. What we want to do is the following</p>
+<pre class="sh"><code>wc -l [the output of the following command: find . -name &#39;*.txt&#39;]</code></pre>
+<p>We do this by puting the find command inside <code>$()</code>.</p>
+<pre class="sh"><code>wc -l $(find . -name &#39;*.txt&#39;)</code></pre>
+<p style="color:blue">
+When the shell executes this command, the first thing it does is run whatever is inside the <code>$()</code>. It then replaces the <code>$()</code> expression with that command’s output. This expansion is exactly what the shell does when it expands wildcards like * and ?, but lets us use any command we want as our own ‘wildcard’.
+</p>
+<p style="color:blue">
+It’s very common to use find and grep together. The first finds files that match a pattern; the second looks for lines inside those files that match another pattern. The find command can be given several other criteria known as “tests” to locate files with specific attributes, such as creation time, size, permissions, or ownership. Use <code>man find</code> to explore these.
+</p>
+</div>
+</div>
+<div id="variables" class="section level2">
+<h2>Variables</h2>
+</div>
+<div id="conditionals" class="section level2">
+<h2>Conditionals</h2>
+</div>
+<div id="permissions-and-executables" class="section level2">
+<h2>Permissions and executables</h2>
+<p>Previously we ran our script as</p>
+<pre class="sh"><code>bash 30min_avg_neon.sh *csv</code></pre>
+<p>If you want to skip the <code>bash</code> instruction and make your script into an executable accessible to anyone you need to change who has access to the script and what kind of access they have. Take a look at your files.</p>
+<pre class="sh"><code>ls -lh</code></pre>
+<p style="color:blue">
+The -l flag tells ls to give us a long-form listing. It’s a lot of information, so let’s go through the columns in turn. On the right side, we have the files’ names. Next to them, moving left, are the times and dates they were last modified. Backup systems and other tools use this information in a variety of ways, but you can use it to tell when you (or anyone else with permission) last changed a file. Next to the modification time is the file’s size in bytes and the names of the user and group that owns it. We’ll skip over the second column for now (the one showing 1 for each file) because it’s the first column that we care about most. This shows the file’s permissions, i.e., who can read, write, or execute it.
+</p>
+<p style="color:blue">
+Let’s have a closer look at one of those permission strings: for example <code>-rwxr-xr-x</code>. The first character tells us what type of thing this is: ‘-‘ means it’s a regular file, while ‘d’ means it’s a directory, and other characters mean more esoteric things. The next three characters tell us what permissions the file’s owner has. Here, the owner can read, write, and execute the file: rwx. The middle triplet shows us the group’s permissions. If the permission is turned off, we see a dash, so r-x means “read and execute, but not write”. The final triplet shows us what everyone who isn’t the file’s owner, or in the file’s group, can do. In this case, it’s ‘r-x’ again, so everyone on the system can look at the file’s contents and run it.
+</p>
+<p>To change permissions, we use the <code>chmod</code> command (whose name stands for “change mode”). Let’s run <code>chmod</code> to everyone give everyone (“all”) read and execute, but not write permission:</p>
+<pre class="sh"><code>chmod a=rx 30min_avg_neon.sh
+ls -lh</code></pre>
+<p>Now that we have made our script into an executable we no longer need <code>bash</code> in front of the script name to run it. However, that means that the computer doesn’t know what interpreter to use to run the script. To inform the computer what interpreter to use add a “shebang” line as the first line of your script. Generally you can use <code>#!/bin/bash</code> although <code>#!/usr/bin/env bash</code> is often recommended for portability in case <code>bash</code> is in a location other than <code>/bin</code>.</p>
+</div>
+<div id="sed-and-awk" class="section level2">
+<h2>Sed and Awk</h2>
+<p>Text from <a href="https://neurohackweek.github.io/advancedunix/01-first-part/">here</a></p>
+<div id="sed" class="section level3">
+<h3>Sed</h3>
+<p style="color:blue">
+<p><code>sed</code> stands for “stream editor”. The purpose of sed is to process strings (from stdin or a file), operating on each line. Digital Ocean has a nice [tutorial on sed] (<a href="https://www.digitalocean.com/community/tutorials/the-basics-of-using-the-sed-stream-editor-to-manipulate-text-in-linux" class="uri">https://www.digitalocean.com/community/tutorials/the-basics-of-using-the-sed-stream-editor-to-manipulate-text-in-linux</a>) that is far more comprehensive than what we’ll do here. For now, we’ll just discuss one of the most popular uses of sed, which is string substitution.</p>
+The general format of sed substitution is as follows: ~~~ sed ‘s/pattern/replacement/g’ ~~~ The text in single quotes is the command for sed. The first character, s is the substitution command for sed. pattern is a regular expression that is replaced by replacement. The final character, g, means that all occurrances of the pattern should be globally replaced (not just the first).
+</p>
+</div>
+<div id="awk" class="section level3">
+<h3>Awk</h3>
+<p style="color:blue">
+Awk is a tool for processing tabular data that is named after the initials of its authors (Aho, Weinberger, and Kernighan). It is popular enough that it has been rewritten and improved, as nawk (new awk) and gawk (GNU awk). Although these variants have differences, and some scripts may work only with particular versions of gawk (for example), the general principles are the same. A full description of awk is well beyond the scope of this tutorial. Grymoire has [a nice tutorial] (<a href="http://www.grymoire.com/Unix/Awk.html" class="uri">http://www.grymoire.com/Unix/Awk.html</a>), and you can also read the comprehensive [gawk manual] (<a href="https://www.gnu.org/software/gawk/manual/gawk.html" class="uri">https://www.gnu.org/software/gawk/manual/gawk.html</a>). The basic structure of an awk script is as follows:
+</p>
+<pre class="sh"><code>BEGIN { action }
+pattern { action }
+END { action }</code></pre>
+<p style="color:blue">
+Basically, awk reads a text file that is structured by fields and records, and fires code (in curly braces) when records match specific patterns. This is made more powerful by the ability to do stuff before you start reading in the BEGIN action block, and the ability to stuff at the END action block. A common use for awk is to parse comma separated value files (csv files). In a csv file, records are lines (and the record separator is a newline character) and fields are items separated by commas within a line.
+</p>
+</div>
 </div>
 
 

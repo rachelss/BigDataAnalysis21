@@ -290,7 +290,7 @@ echo cp ../shared/NEON*/*[AB].pdf .
 
 ## Pipes and filters
 
-As we did in R, we can pipe the output of one cammand directly to the next command.
+As we did in R, we can pipe the output of one command directly to the next command.
 First let's look at output step-by-step.
 
 Get the line counts for the csv files in the folder of data we've been working with.
@@ -484,3 +484,340 @@ do
     Rscript 30min_avg_neon.R $filename
 done
 ```
+
+## Scripts
+
+To preserve the code and make it reproducible, copy it into a script.
+Inside the terminal you can use `nano` or if you're using RStudio server you can make a new file in the script window
+and paste your code there.
+Save the script with a `.sh` extension to indicate that it is a shell script.
+Now save the file and exit nano if necessary.
+Run the shell script by typing 
+
+```{sh 28, eval = FALSE}
+bash 30min_avg_neon.sh
+```
+
+To help future readers of this script know what it does and how to run it add some comments at the top.
+
+```{sh 28b, eval = FALSE}
+# Run RScript to get 30min averages for neon data for all csvs
+# Usage: bash 30min_avg_neon.sh
+```
+
+This works, but every time we want to change the list of files we're analyzing
+we need to change the script.
+Alternatively, we can specify arguments on the command line.
+We can then pass these arguments to the script.
+Let's start with a simple example.
+Write a script to print the 10th line of the first csv file.
+
+```{sh 29, eval = FALSE}
+# Print the 10th line of the file.
+# Usage: bash printline10.sh
+
+head -10 NEON.D03.BARC.DP1.20046.001.103.100.001.RHbuoy_1min.2019-01.basic.20190424T185418Z.csv | tail -1
+```
+
+Now let's change this so we can specify the name of the file on the command line
+rather than opening the file every time.
+In your text editor replace the file name with the special variable `$1`.
+Inside a shell script, $1 means 'the first argument on the command line'. 
+Note that you should put $1 with double-quotes in case the filename happens to contain any spaces.
+
+```{sh 29bb, eval = FALSE}
+# Print the 10th line of the file.
+# Usage: bash printline10.sh
+
+head -10 "$1" | tail -1
+```
+
+We can now run our script like this:
+
+```{sh 29c, eval = FALSE}
+bash printline10.sh NEON.D03.BARC.DP1.20046.001.103.100.001.RHbuoy_1min.2019-01.basic.20190424T185418Z.csv
+```
+
+Or like this:
+
+```{sh 29d, eval = FALSE}
+bash printline10.sh NEON.D03.BARC.DP1.20046.001.103.100.001.RHbuoy_1min.2019-02.basic.20190418T193559Z.csv
+```
+
+If we want to pick a different line to print we currently need to edit the file.
+Let’s fix that by using the special variable `$2` for the number of the lines to be passed to head:
+
+```{sh 29b, eval = FALSE}
+# Print a specified line of a file.
+# Usage: bash printline10.sh [filename] [line to print]
+
+head -"$2" "$1" | tail -1
+```
+
+Now we run the script as
+
+```{sh 29d2, eval = FALSE}
+mv printline10.sh printline.sh
+bash printline.sh NEON.D03.BARC.DP1.20046.001.103.100.001.RHbuoy_1min.2019-02.basic.20190418T193559Z.csv 10
+```
+
+Note that you should change the file name, description of what it does, and usage.
+
+Now let's go back to our original script to loop through our csv files and calculate 30 minute averages.
+If we want to specify the list of files on the command line 
+we can’t use `$1`, `$2`, and so on because we don’t know how many files there are. Instead, we use the special variable `$@`, which means, 'All of the command-line arguments to the shell script'. 
+We also should put `$@` inside double-quotes to handle the case of arguments containing spaces.
+Remember that when we put `*csv` as a command line argument the wildcard is expanded before passing arguments
+to the script so you are passing all the file names individually, not the single argument.
+If you want to pass '*csv' literally without expanding it we need to enclose it in single quote marks. 
+The variable `$1` will then be '*csv' and can be expanded within the script.
+
+```{sh 30, eval = FALSE}
+# Run RScript to get 30min averages for neon data for all csvs
+# Usage: bash 30min_avg_neon.sh [filenames]
+
+for filename in "$@"
+do
+    echo $filename
+    Rscript 30min_avg_neon.R $filename
+done
+```
+
+```{sh 30b, eval = FALSE}
+bash 30min_avg_neon.sh *csv
+```
+
+```{sh 30c, eval = FALSE}
+bash 30min_avg_neon.sh NEON.D03.BARC.DP1.20046.001.2019-02.basic.20190418T193559Z/*csv
+```
+
+## Finding things
+
+### Finding things in files
+
+We have downloaded data for a bunch of different sites.
+The readme file in each folder provides the latitude and longitude of each site.
+If we wanted to put this information into a single metadata spreadsheet to work with we could open each file and copy-paste the coordinates.
+Or we can ask the computer to do the searching for us.
+
+`grep` finds and prints lines in files that match a pattern. 
+grep is a contraction of ‘global/regular expression/print’.
+If our files we are interested in finding lines containing "Geographic coordinates"
+and printing those to the screen or an output file.
+To use `grep` type `grep`, then the pattern we’re searching for and finally the name of the file (or files) we’re searching in.
+
+```{sh 31, eval = FALSE}
+grep Geographic */*readme*
+```
+
+The output is the line(s) in each file that contain the search term.
+By default, grep searches for a pattern in a case-sensitive way. 
+Use the option -i to make the search case-insensitive.
+In addition, the search pattern does not have to form a complete word, as we will see in the next example.
+
+```{sh 31b, eval = FALSE}
+grep "Geo" */*readme*
+```
+
+To restrict matches to lines containing the search term as a complete work, we can give grep with the -w option. 
+This will limit matches to word boundaries, which doesn't match anything in this example.
+
+If you want to search for a phrase rather than a single word, put the phrase in quotes.
+
+```{sh 31c, eval = FALSE}
+grep "Geographic coordinates" */*readme*
+```
+
+grep’s real power comes from the fact that search patterns can include wildcards (termed regular expressions).
+Let's say we want to find measurements on April 20, 2019 at 1AM.
+First we tell grep to anchor its search at the beginning of the line with ^.
+Then we want a quote, but we've been using quote indicate what to search for so to avoid ending 
+our search term we need to indicate that we're search for this character by escaping it.
+The backslash -- \ -- escapes a special character, which means that character gets interpreted literally (and is therefore no longer special).
+Now we can enter the rest of our search string.
+
+```{sh 32, eval = FALSE}
+grep "^\"2019-04-20T01:00" */*csv
+```
+
+If we want to search for measurements on April 20 OR 21, 2019 at 1AM
+we need to indicate either a 0 or 1.
+Brackets -- [...] -- enclose a set of characters to match in a single regular expression.
+
+```{sh 3b2, eval = FALSE}
+grep "^\"2019-04-2[01]T01:00" */*csv
+```
+
+[0-9] matches any single digit.
+We can use this to get measurements any time from April 20-29, 2019 at 1AM.
+
+```{sh 32c, eval = FALSE}
+grep "^\"2019-04-2[0-9]T01:00" */*csv
+```
+
+Parentheses enclose longer sets of alternative strings and are used with the or operator "|".
+Here we get measurements any time on April 1, 2019 or 2020 at 1AM.
+
+```{sh 32d, eval = FALSE}
+grep -E "^\"20(19|20)-04-01T01:00" */*csv
+```
+
+Note that as we get more complicated regular expressions we add the E flag to support this.
+
+Now you try.
+Search for temperature measurements at other times.
+And of course try `man grep` to view other flags and options for searching.
+
+### Finding files
+
+<p style="color:blue">
+While grep finds lines in files, the find command finds files themselves. 
+For our first command, let’s run `find .`
+</p>
+
+```{sh 33, eval = FALSE}
+find .
+```
+
+<p style="color:blue">
+As always, the . on its own means the current working directory, which is where we want our search to start. `find`'s output is the names of every file and directory under the current working directory. 
+</p>
+
+We can specify that we want to find specifically files or directories using the `-type` flag.
+
+```{sh 33b, eval = FALSE}
+find . -type f
+```
+
+```{sh 33c, eval = FALSE}
+find . -type d
+```
+
+Now let’s try matching by name:
+
+```{sh 34, eval = FALSE}
+find . -name *.txt
+```
+
+Although this seems to work okay, remember that the command line generally expands a wildcard before running a command.
+To ensure that we are finding '*.txt' not the txt files in the current directory only,
+we should put the search term in quotes.
+
+```{sh 34b, eval = FALSE}
+find . -name '*.txt'
+```
+
+If you wanted the line counts of all these files you might try to pipe this output to `wc`.
+
+```{sh 35, eval = FALSE}
+find . -name '*.txt' | wc -l
+```
+
+However, this counts the number of lines in the output not in each file.
+What we want to do is the following
+
+```{sh 35b, eval = FALSE}
+wc -l [the output of the following command: find . -name '*.txt']
+```
+
+We do this by puting the find command inside `$()`.
+
+```{sh 35c, eval = FALSE}
+wc -l $(find . -name '*.txt')
+```
+
+<p style="color:blue">
+When the shell executes this command, the first thing it does is run whatever is inside the `$()`. 
+It then replaces the `$()` expression with that command’s output. 
+This expansion is exactly what the shell does when it expands wildcards like * and ?, but lets us use any command we want as our own ‘wildcard’.
+</p>
+
+<p style="color:blue">
+It’s very common to use find and grep together. 
+The first finds files that match a pattern; the second looks for lines inside those files that match another pattern. 
+The find command can be given several other criteria known as “tests” to locate files with specific attributes, such as creation time, size, permissions, or ownership. Use `man find` to explore these.
+</p>
+
+## Variables
+
+
+## Conditionals
+
+
+
+
+## Permissions and executables
+
+Previously we ran our script as
+
+```{sh 36, eval = FALSE}
+bash 30min_avg_neon.sh *csv
+```
+
+If you want to skip the `bash` instruction and make your script into an executable accessible to anyone you need to change who has 
+access to the script and what kind of access they have.
+Take a look at your files.
+
+```{sh 36b, eval = FALSE}
+ls -lh
+```
+
+<p style="color:blue">
+The -l flag tells ls to give us a long-form listing. It’s a lot of information, so let’s go through the columns in turn.
+On the right side, we have the files’ names. 
+Next to them, moving left, are the times and dates they were last modified. 
+Backup systems and other tools use this information in a variety of ways, but you can use it to tell when you (or anyone else with permission) last changed a file.
+Next to the modification time is the file’s size in bytes and the names of the user and group that owns it. 
+We’ll skip over the second column for now (the one showing 1 for each file) because it’s the first column that we care about most. 
+This shows the file’s permissions, i.e., who can read, write, or execute it.
+</p>
+
+<p style="color:blue">
+Let’s have a closer look at one of those permission strings: for example `-rwxr-xr-x`. 
+The first character tells us what type of thing this is: ‘-‘ means it’s a regular file, while ‘d’ means it’s a directory, and other characters mean more esoteric things.
+The next three characters tell us what permissions the file’s owner has. Here, the owner can read, write, and execute the file: rwx. The middle triplet shows us the group’s permissions. If the permission is turned off, we see a dash, so r-x means “read and execute, but not write”. The final triplet shows us what everyone who isn’t the file’s owner, or in the file’s group, can do. In this case, it’s ‘r-x’ again, so everyone on the system can look at the file’s contents and run it.
+</p>
+
+To change permissions, we use the `chmod` command (whose name stands for “change mode”). 
+Let’s run `chmod` to everyone give everyone ("all") read and execute, but not write permission:
+
+```{sh 36c, eval = FALSE}
+chmod a=rx 30min_avg_neon.sh
+ls -lh
+```
+
+Now that we have made our script into an executable we no longer need `bash` in front of the script name to run it.
+However, that means that the computer doesn't know what interpreter to use to run the script.
+To inform the computer what interpreter to use add a "shebang" line as the first line of your script.
+Generally you can use `#!/bin/bash` although
+`#!/usr/bin/env bash` is often recommended for portability in case 
+`bash` is in a location other than `/bin`.
+
+## Sed and Awk
+Text from [here](https://neurohackweek.github.io/advancedunix/01-first-part/)
+
+### Sed
+
+<p style="color:blue">
+`sed` stands for “stream editor”. The purpose of sed is to process strings (from stdin or a file), operating on each line. Digital Ocean has a nice [tutorial on sed] (https://www.digitalocean.com/community/tutorials/the-basics-of-using-the-sed-stream-editor-to-manipulate-text-in-linux) that is far more comprehensive than what we’ll do here. For now, we’ll just discuss one of the most popular uses of sed, which is string substitution.
+
+The general format of sed substitution is as follows: ~~~ sed ‘s/pattern/replacement/g’ ~~~ The text in single quotes is the command for sed. The first character, s is the substitution command for sed. pattern is a regular expression that is replaced by replacement. The final character, g, means that all occurrances of the pattern should be globally replaced (not just the first).
+</p>
+
+### Awk
+
+<p style="color:blue">
+Awk is a tool for processing tabular data that is named after the initials of its authors (Aho, Weinberger, and Kernighan). It is popular enough that it has been rewritten and improved, as nawk (new awk) and gawk (GNU awk). Although these variants have differences, and some scripts may work only with particular versions of gawk (for example), the general principles are the same. A full description of awk is well beyond the scope of this tutorial. Grymoire has [a nice tutorial] (http://www.grymoire.com/Unix/Awk.html), and you can also read the comprehensive [gawk manual] (https://www.gnu.org/software/gawk/manual/gawk.html).
+The basic structure of an awk script is as follows:
+</p>
+
+```{sh 37, eval = FALSE}
+BEGIN { action }
+pattern { action }
+END { action }
+```
+
+<p style="color:blue">
+Basically, awk reads a text file that is structured by fields and records, and fires code (in curly braces) when records match specific patterns. This is made more powerful by the ability to do stuff before you start reading in the BEGIN action block, and the ability to stuff at the END action block.
+A common use for awk is to parse comma separated value files (csv files). In a csv file, records are lines (and the record separator is a newline character) and fields are items separated by commas within a line.
+</p>
