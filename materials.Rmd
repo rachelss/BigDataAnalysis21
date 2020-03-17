@@ -71,5 +71,8 @@ Read: [Janssens](https://www.datascienceatthecommandline.com/) ch. 4.2.2
 Read: Buffalo ch. 12 (1st part)
 
 ### Day 14 3/17
+Read: Buffalo ch. 12 (conditionals)  
+
+### Day 15 2/29
 [Sed and Awk](https://neurohackweek.github.io/advancedunix/01-first-part/)  
 Read: Buffalo 7 (2nd part), 12 (2nd part)

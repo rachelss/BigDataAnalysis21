@@ -806,9 +806,51 @@ It’s very common to use find and grep together. The first finds files that mat
 </div>
 <div id="variables" class="section level2">
 <h2>Variables</h2>
+<p>So far we have seen variables in bash as part of command line arguments (e.g. <code>$1</code> and <code>$@</code>) and in loops. For example:</p>
+<pre><code>for i in {1..10} ; do
+     echo $i
+done</code></pre>
+<p>You can also assign information to variables directly.</p>
+<pre><code>name=&quot;Rachel Schwartz&quot;
+echo $name</code></pre>
+<pre><code>csvFiles=$( ls *.csv )
+echo $csvFiles</code></pre>
+<p>Note that there are no spaces around the equal sign! Variables may be used on the command line or in scripts.</p>
+<p>In the following we create new blank files by looping through a set of numbers and assigned a file name to a variable. Note the curly braces around the variable to ensure the variable is <code>i</code> and doesn’t look for a variable 12020.</p>
+<pre><code>for i in {1..4}; do 
+  fileName=data_${i}2020.csv
+  touch $fileName
+  echo &quot;Created file ${fileName}&quot;
+done</code></pre>
 </div>
 <div id="conditionals" class="section level2">
 <h2>Conditionals</h2>
+<p>We briefly saw if-else statements in R. Logically, we often want to have our actions conditioned on particular cases. That is, if we observe one condition in the data we want want action, and for another condition we want to implement another action. An if statement (more properly called a conditional statement) controls whether some block of code is executed or not.</p>
+<p>The structure of a conditional in bash is similar to a for statement. The conditional opens with <code>if</code> and ends with <code>fi</code>. The condition is placed in square brackets and followed by <code>then</code>.</p>
+<pre><code>num=1
+if [ &quot;$num&quot; -gt &quot;150&quot; ]
+then 
+  echo &quot;$num is greater than 150&quot;
+fi</code></pre>
+<p>If-Else</p>
+<pre><code>num=1
+if [ &quot;$num&quot; -gt &quot;150&quot; ]
+then 
+  echo &quot;$num is greater than 150&quot;
+else
+  echo &quot;$num is not greater than 150&quot;
+fi</code></pre>
+<p>If - ElseIf - Else</p>
+<pre><code>num=1
+if [ &quot;$num&quot; -gt &quot;150&quot; ]
+then 
+  echo &quot;$num is greater than 150&quot;
+elif [ &quot;$num&quot; -eq &quot;150&quot; ]
+  echo &quot;$num is not greater than 150&quot;
+else
+  echo &quot;$num is less than than 150&quot;
+fi</code></pre>
+<p>For numerical comparisons use <code>-gt</code> <code>-eq</code> <code>-lt</code>. For character comparisons use <code>&gt;</code> <code>==</code> <code>&lt;</code>.</p>
 </div>
 <div id="permissions-and-executables" class="section level2">
 <h2>Permissions and executables</h2>
@@ -827,27 +869,42 @@ Let’s have a closer look at one of those permission strings: for example <code
 ls -lh</code></pre>
 <p>Now that we have made our script into an executable we no longer need <code>bash</code> in front of the script name to run it. However, that means that the computer doesn’t know what interpreter to use to run the script. To inform the computer what interpreter to use add a “shebang” line as the first line of your script. Generally you can use <code>#!/bin/bash</code> although <code>#!/usr/bin/env bash</code> is often recommended for portability in case <code>bash</code> is in a location other than <code>/bin</code>.</p>
 </div>
-<div id="sed-and-awk" class="section level2">
-<h2>Sed and Awk</h2>
-<p>Text from <a href="https://neurohackweek.github.io/advancedunix/01-first-part/">here</a></p>
+<div id="text-manipulation" class="section level2">
+<h2>Text manipulation</h2>
+<p>Note: Some of the following text is from <a href="https://neurohackweek.github.io/advancedunix/01-first-part/">here</a></p>
+<p>Sed and Awk are both text manipulation programs. <code>sed</code> is a stream editor used to perform basic text transformations on an input stream (a file or input from a pipeline). <code>awk</code> is a tool for processing tabular data.</p>
 <div id="sed" class="section level3">
 <h3>Sed</h3>
-<p style="color:blue">
-<p><code>sed</code> stands for “stream editor”. The purpose of sed is to process strings (from stdin or a file), operating on each line. Digital Ocean has a nice [tutorial on sed] (<a href="https://www.digitalocean.com/community/tutorials/the-basics-of-using-the-sed-stream-editor-to-manipulate-text-in-linux" class="uri">https://www.digitalocean.com/community/tutorials/the-basics-of-using-the-sed-stream-editor-to-manipulate-text-in-linux</a>) that is far more comprehensive than what we’ll do here. For now, we’ll just discuss one of the most popular uses of sed, which is string substitution.</p>
-The general format of sed substitution is as follows: ~~~ sed ‘s/pattern/replacement/g’ ~~~ The text in single quotes is the command for sed. The first character, s is the substitution command for sed. pattern is a regular expression that is replaced by replacement. The final character, g, means that all occurrances of the pattern should be globally replaced (not just the first).
-</p>
+<p>A common use of <code>sed</code> is to replace occurrences of text in a file (i.e. string substitution). The general format of sed substitution is as follows: <code>sed &#39;s/pattern/replacement/g&#39;</code>. The first character, <code>s</code> is the substitution command for sed; <code>pattern</code> is a regular expression that is replaced by <code>replacement</code>. The final character, <code>g</code>, means that all occurrances of the pattern should be globally replaced (not just the first). For example, the following will replace instances of the word ‘hello’ with ‘world’ in the file <code>input.txt</code> and write the result to <code>output.txt</code>.</p>
+<pre class="sh"><code>sed &#39;s/hello/world/&#39; input.txt &gt; output.txt</code></pre>
+<p>Previously we made copies of files appending ‘original’ to the name of the file.</p>
+<pre><code>for filename in */*csv; do cp $filename ${filename}.original; done</code></pre>
+<p>We can use <code>sed</code> to replace <code>.csv</code> with <code>_original.csv</code>.</p>
+<pre><code>for filename in */*csv; do 
+  newfilename=$(echo $filename | sed &#39;s/.csv/_original.csv/&#39;)
+  echo cp ${filename} ${newfilename}
+done</code></pre>
 </div>
 <div id="awk" class="section level3">
 <h3>Awk</h3>
-<p style="color:blue">
-Awk is a tool for processing tabular data that is named after the initials of its authors (Aho, Weinberger, and Kernighan). It is popular enough that it has been rewritten and improved, as nawk (new awk) and gawk (GNU awk). Although these variants have differences, and some scripts may work only with particular versions of gawk (for example), the general principles are the same. A full description of awk is well beyond the scope of this tutorial. Grymoire has [a nice tutorial] (<a href="http://www.grymoire.com/Unix/Awk.html" class="uri">http://www.grymoire.com/Unix/Awk.html</a>), and you can also read the comprehensive [gawk manual] (<a href="https://www.gnu.org/software/gawk/manual/gawk.html" class="uri">https://www.gnu.org/software/gawk/manual/gawk.html</a>). The basic structure of an awk script is as follows:
-</p>
-<pre class="sh"><code>BEGIN { action }
-pattern { action }
-END { action }</code></pre>
-<p style="color:blue">
-Basically, awk reads a text file that is structured by fields and records, and fires code (in curly braces) when records match specific patterns. This is made more powerful by the ability to do stuff before you start reading in the BEGIN action block, and the ability to stuff at the END action block. A common use for awk is to parse comma separated value files (csv files). In a csv file, records are lines (and the record separator is a newline character) and fields are items separated by commas within a line.
-</p>
+<p>The basic structure of an awk script is as follows:</p>
+<pre><code>awk options program file</code></pre>
+<p>To define an awk script, use braces surrounded by single quotation marks. With awk, you can process text files. Awk assigns variables for each data field:<br />
+$0 for the whole line.<br />
+$1 for the first field.<br />
+$2 for the second field.<br />
+$n for the nth field.</p>
+<p>The following prints the first field (column or word) of myfile assuming a space or tab separator.</p>
+<pre><code>awk &#39;{print $1}&#39; myfile</code></pre>
+<p>If you need to specify a different field separator use the <code>-F</code> flag.</p>
+<p>Awk can run multiple commands consecutively separated with a semicolon:</p>
+<pre><code>echo &quot;Hello Tom&quot; | awk &#39;{$2=&quot;Adam&quot;; print $0}&#39;</code></pre>
+<p>Here $2 indicates the second word, where Tom is substituted for Adam. Then the whole line is printed.</p>
+<p>Note that <code>awk</code> uses <code>$1</code> and similar differently from the shell. If you use <code>awk</code> in a script and need to pass variables you should end the quoted awk script, enter the shell information, and continue with the awk script in quotes.</p>
+<p>Alternatively you can pass shell variables into awk variables using the -v option.</p>
+<pre><code>myfile=&quot;somefile.csv&quot;
+echo | awk -v f=$myfile &#39;{ print &quot;shell variable $myfile is &quot; f}&#39; </code></pre>
+<p>Note that awk requires file input or input from the command line so here we echo nothing and pipe that to awk.</p>
 </div>
 </div>
 

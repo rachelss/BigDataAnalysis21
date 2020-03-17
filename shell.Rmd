@@ -740,11 +740,92 @@ The find command can be given several other criteria known as “tests” to loc
 
 ## Variables
 
+So far we have seen variables in bash as part of command line arguments
+(e.g. `$1` and `$@`) and in loops. For example:
+
+```
+for i in {1..10} ; do
+     echo $i
+done
+```
+
+You can also assign information to variables directly.
+
+```
+name="Rachel Schwartz"
+echo $name
+```
+
+```
+csvFiles=$( ls *.csv )
+echo $csvFiles
+```
+
+Note that there are no spaces around the equal sign!
+Variables may be used on the command line or in scripts.
+
+In the following we create new blank files by looping through a set of numbers
+and assigned a file name to a variable.
+Note the curly braces around the variable to ensure the variable is `i` and doesn't
+look for a variable 12020.
+
+```
+for i in {1..4}; do 
+  fileName=data_${i}2020.csv
+  touch $fileName
+  echo "Created file ${fileName}"
+done
+```
 
 ## Conditionals
 
+We briefly saw if-else statements in R.
+Logically, we often want to have our actions conditioned on particular cases.
+That is, if we observe one condition in the data we want want action,
+and for another condition we want to implement another action.
+An if statement (more properly called a conditional statement) controls whether some block of code is executed or not.
 
+The structure of a conditional in bash is similar to a for statement.
+The conditional opens with `if` and ends with `fi`.
+The condition is placed in square brackets
+and followed by `then`.
 
+```
+num=1
+if [ "$num" -gt "150" ]
+then 
+  echo "$num is greater than 150"
+fi
+```
+
+If-Else
+
+```
+num=1
+if [ "$num" -gt "150" ]
+then 
+  echo "$num is greater than 150"
+else
+  echo "$num is not greater than 150"
+fi
+```
+
+If - ElseIf - Else
+
+```
+num=1
+if [ "$num" -gt "150" ]
+then 
+  echo "$num is greater than 150"
+elif [ "$num" -eq "150" ]
+  echo "$num is not greater than 150"
+else
+  echo "$num is less than than 150"
+fi
+```
+
+For numerical comparisons use `-gt` `-eq` `-lt`.
+For character comparisons use `>` `==` `<`.
 
 ## Permissions and executables
 
@@ -793,31 +874,84 @@ Generally you can use `#!/bin/bash` although
 `#!/usr/bin/env bash` is often recommended for portability in case 
 `bash` is in a location other than `/bin`.
 
-## Sed and Awk
-Text from [here](https://neurohackweek.github.io/advancedunix/01-first-part/)
+## Text manipulation
+
+Note: Some of the following text is from [here](https://neurohackweek.github.io/advancedunix/01-first-part/)
+
+Sed and Awk are both text manipulation programs.
+`sed` is a stream editor used to perform basic text transformations on an input stream (a file or input from a pipeline).
+`awk` is a tool for processing tabular data.
 
 ### Sed
 
-<p style="color:blue">
-`sed` stands for “stream editor”. The purpose of sed is to process strings (from stdin or a file), operating on each line. Digital Ocean has a nice [tutorial on sed] (https://www.digitalocean.com/community/tutorials/the-basics-of-using-the-sed-stream-editor-to-manipulate-text-in-linux) that is far more comprehensive than what we’ll do here. For now, we’ll just discuss one of the most popular uses of sed, which is string substitution.
+A common use of `sed` is to replace occurrences of text in a file (i.e. string substitution).
+The general format of sed substitution is as follows: `sed 's/pattern/replacement/g'`.
+The first character, `s` is the substitution command for sed; `pattern` is a regular expression that is replaced by `replacement`. 
+The final character, `g`, means that all occurrances of the pattern should be globally replaced (not just the first).
+For example, the following will replace instances of the word 'hello' with 'world'
+in the file `input.txt` and write the result to `output.txt`.
 
-The general format of sed substitution is as follows: ~~~ sed ‘s/pattern/replacement/g’ ~~~ The text in single quotes is the command for sed. The first character, s is the substitution command for sed. pattern is a regular expression that is replaced by replacement. The final character, g, means that all occurrances of the pattern should be globally replaced (not just the first).
-</p>
+```{sh 37, eval = FALSE}
+sed 's/hello/world/' input.txt > output.txt
+```
+
+Previously we made copies of files appending 'original' to the name of the file.
+
+```
+for filename in */*csv; do cp $filename ${filename}.original; done
+```
+
+We can use `sed` to replace `.csv` with `_original.csv`.
+
+```
+for filename in */*csv; do 
+  newfilename=$(echo $filename | sed 's/.csv/_original.csv/')
+  echo cp ${filename} ${newfilename}
+done
+```
 
 ### Awk
 
-<p style="color:blue">
-Awk is a tool for processing tabular data that is named after the initials of its authors (Aho, Weinberger, and Kernighan). It is popular enough that it has been rewritten and improved, as nawk (new awk) and gawk (GNU awk). Although these variants have differences, and some scripts may work only with particular versions of gawk (for example), the general principles are the same. A full description of awk is well beyond the scope of this tutorial. Grymoire has [a nice tutorial] (http://www.grymoire.com/Unix/Awk.html), and you can also read the comprehensive [gawk manual] (https://www.gnu.org/software/gawk/manual/gawk.html).
 The basic structure of an awk script is as follows:
-</p>
 
-```{sh 37, eval = FALSE}
-BEGIN { action }
-pattern { action }
-END { action }
+```
+awk options program file
 ```
 
-<p style="color:blue">
-Basically, awk reads a text file that is structured by fields and records, and fires code (in curly braces) when records match specific patterns. This is made more powerful by the ability to do stuff before you start reading in the BEGIN action block, and the ability to stuff at the END action block.
-A common use for awk is to parse comma separated value files (csv files). In a csv file, records are lines (and the record separator is a newline character) and fields are items separated by commas within a line.
-</p>
+To define an awk script, use braces surrounded by single quotation marks.
+With awk, you can process text files. Awk assigns variables for each data field:  
+$0 for the whole line.  
+$1 for the first field.  
+$2 for the second field.  
+$n for the nth field.  
+
+The following prints the first field (column or word) of myfile assuming a space or tab separator.
+
+```
+awk '{print $1}' myfile
+```
+
+If you need to specify a different field separator use the `-F` flag.
+
+Awk can run multiple commands consecutively separated with a semicolon:
+
+```
+echo "Hello Tom" | awk '{$2="Adam"; print $0}'
+```
+
+Here $2 indicates the second word, where Tom is substituted for Adam.
+Then the whole line is printed.
+
+Note that `awk` uses `$1` and similar differently from the shell.
+If you use `awk` in a script and need to pass variables you should end the quoted awk script,
+enter the shell information, and continue with the awk script in quotes.
+
+Alternatively you can pass shell variables into awk variables
+using the -v option. 
+
+```
+myfile="somefile.csv"
+echo | awk -v f=$myfile '{ print "shell variable $myfile is " f}' 
+```
+
+Note that awk requires file input or input from the command line so here we echo nothing and pipe that to awk.
