@@ -1,0 +1,270 @@
+---
+title: "High Performance Computing"
+author: "Rachel Schwartz"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+```
+
+## Intro
+
+Windows users should install [MobaXterm(http://mobaxterm.mobatek.net/) Home edition (Installer edition).
+
+Read the [Software Carpentry HPC Intro](https://hpc-carpentry.github.io/hpc-intro/11-hpc-intro/index.html).
+
+URI offers two clusters for High Performance Computing. Seawulf is the educational cluster; Bluewaves is the research cluster.
+For more information on HPC at URI go to the HPC [website](https://web.uri.edu/hpc-research-computing/).
+
+## Connecting to the HPC
+
+<p style="color:blue">
+The cloud is a generic term commonly used to refer to remote computing resources of any kind – that is, any computers that you use but are not right in front of you. Cloud can refer to machines serving websites, providing shared storage, providing webservices (such as e-mail or social media platforms), as well as more traditional “compute” resources. An HPC system on the other hand, is a term used to describe a network of computers. The computers in a cluster typically share a common purpose, and are used to accomplish tasks that might otherwise be too big for any one computer.
+</p>
+
+**Mac**
+To login to the cluster open your Terminal. 
+Connect to URI's seawulf cluster using `ssh` (**s**ecure **sh**ell) and your URI username. 
+Your username is the first half of your email. For example  
+  ```ssh rsschwartz@seawulf.uri.edu```
+Enter your password when prompted. Your password is your id number.
+
+**Windows**
+To login to the cluster open MobaXTerm. 
+Click `session` and `ssh`.
+Enter `seawulf.uri.edu` as the host and your username (first half of your email).
+Click okay and enter your password (URI id number) when prompted.
+
+## Getting started with HPC
+
+For the most part the HPC looks just like the server we've been working on,
+or even your local computer.
+In some cases you might be accessing one single large computer.
+However, in a lot of cases you'll access a cluster of connected computing nodes
+with access to shared storage.
+The node where you are right now is called the head node or login node. 
+A login node serves as an access point to the cluster. 
+To avoid having many people use the same resource and overloading the head node
+you should never use it for doing actual work.
+The real work on a cluster gets done by the compute nodes.
+
+There are two ways to run jobs on a cluster. First, you can run them interactively just like you do on your own computer. The advantage of this is you can work easily and directly. The disadvantage is that you might want to run a job that takes a long time and you'd like to take advantage of the computing power of the cluster (that's why you're using it in the first place).
+If you want to do interactive work you can submit an interactive job.
+
+```{sh 1}
+interactive
+```
+
+The above command launches an interactive session with 1 core for 8 hours executing bash shell.  
+When you submit an interactive session it will go to one of the available partitions. 
+Partitions offer different options. 
+On seawulf, the debug queue is for short jobs and is meant to be available without waiting. 
+The general queue may require a wait; however, you may run your job for as long as necessary.
+
+You should see your prompt change to indicate that you are on a particular node.
+
+Now let's open R to do some work.
+However, before you can run R (or pretty much any program) you need to load it
+(much as we load libraries in R).
+While it may seem strange that software is not available by default, this allows
+multiple versions of software to be loaded on the cluster and the user can select
+the version they need.
+To list the programs that are available on the cluster:
+
+```{sh 2}
+module avail
+```
+
+This will print the full list, which might be long so you can provide a starting character or two to limit the list. Note the list is case sensitive.
+
+```{sh 2b}
+module avail R
+```
+
+Now we can load the most recent version of R.
+
+```{sh 2c}
+module load R
+R
+q()
+```
+
+## Maintaining multiple sessions
+
+Processes will be terminated if you close your terminal window or disconnect from the
+cluster (accidentally due to a loss of network connection or intentionally when putting the computer to sleep).
+`tmux` (a terminal multiplexer) allows you to create persistant sessions, each capable of running their own processes that won’t be lost if your connection drops or you close your terminal window to go home (or even quit your terminal program). 
+Each `tmux` session is a separate environment. 
+Create a new Tmux session.
+
+```tmux new-session -s r_test```
+
+`new-session` creates a new session and the -s option gives this session a name so it’s easier to identify later. 
+
+From inside the tmux session you can run your work as usual.
+However, if you run a job that you expect to take a while you get get it started then detach
+the tmux session to do other things on the cluster.
+Use Ctrl-b then d to detach.
+Note: you should still do any work on a compute node (using an interactive session).
+
+Now, reattach the session with `tmux attach`.
+
+Because we only have one session running we don’t have to specify which session to attach. 
+If you have more than one session running use `tmux list-sessions` to get session names,
+and reattach a particular session using `tmux -t <session-name>`.
+  
+## Uploading and Downloading
+
+To copy files from your computer to the cluster use secure copy (`scp`). 
+Navigate your computer.
+Copy a folder to the cluster.  
+```scp -r data-shell rsschwartz@seawulf.uri.edu:```
+
+When specifying the destination the address has a colon followed by the folders.
+If you are copying to your home directory you must include the colon even if you do not specify a folder.
+
+Make a change to a file in the folder on your local computer. 
+Rather than copying the whole folder again just update with these recent changes.  
+```rsync -r data-shell rsschwartz@seawulf.uri.edu:```
+
+Make a change to a file in the folder on the cluster.
+To download the entire folder use `scp` from your local computer, but
+specify the cluster first followed by the destination directory.
+
+```scp -r rsschwartz@seawulf.uri.edu:data-shell . ```
+
+To download files from the internet, the easiest tool to use is wget. 
+The syntax is relatively straightforward: ```wget https://some/link/to/a/file.tar.gz``` 
+
+``` wget https://hpc-carpentry.github.io/hpc-intro/files/bash-lesson.tar.gz```
+
+Now unzip the file
+
+``` tar -xvf bash-lesson.tar.gz```
+
+`tar` manipulates archive files. You will often see files zipped up as `.tar.gz`.
+
+## Scheduling jobs
+
+If you are working with analyses that will take some time you should not use an interactive job. 
+Instead you will write a script to submit a job. Your script might look like
+
+```
+#!/bin/bash
+#SBATCH -t 1:00:00
+#SBATCH -p general # partition (queue)
+#SBATCH -N 1 # number of nodes
+#SBATCH -n 1 # number of cores
+#SBATCH -J job_name # job name
+
+module load StringTie/1.3.3-foss-2016b
+
+touch SomeRandomNumbers.txt
+for i in {1..100000}; do
+  echo $RANDOM >> SomeRandomNumbers.txt
+done
+
+sort -n SomeRandomNumbers.txt > SortedRandomNumbers.txt
+```
+
+You are already familiar with the shebang line. 
+All lines starting with `#SBATCH` indicate parameters related to job submission. 
+`#SBATCH -p general` specifies the partition. 
+`#SBATCH -t 1:00:00` allows the job to run for up to 1 hour. Note that time is specified as the number of real-world hours, called wall time (i.e. the amount of time passing on the clock on the wall), not the number of CPU hours. 
+`#SBATCH -N 1` indicates you need 1 node. 
+`#SBATCH -n 1` indicates you need 1 processor on that node. There are many other possible SBATCH parameters not included here.
+`#SBATCH -J job_name` specifies the name of a job. By default, a job’s name is the name of the script.
+
+* Exit your interactive session. Submit this batch file as a job by running `sbatch job_example.sh`
+* Check the status of your job (and others) using `squeue`.
+* Your output and any errors have been sent to files rather than printed on the screen. Use `ls` and `cat` to see the files and your output.
+
+Note: If you have any large or important data you are working you should not store it in your home directory. Additional storage is connected to the Bluewaves cluster and access can be arranged by the HPC manager.
+
+**An important caveat**: 
+Remember that you are sharing this system with other users. 
+If you request resources that you aren't using that prevents others from using those resources. 
+Imagine a job script with a mistake that makes it sit doing nothing for 24 hours on 1000 cores or one where you have requested 2000 cores by mistake and only use 100 of them! 
+When this happens it hurts other users who are blocked from accessing the idle compute nodes.
+Where possible, test how your job is running on a small scale before requesting large resources.
+
+## Monitoring jobs
+
+If you submit a job that you need to cancel first run `squeue` to get the job id then run `scancel <jobid>`.
+
+Now check how the cluster is doing with ```htop``` or ```slurmtop```.
+
+To show all processes from your current session, type `ps`.
+Note that this will only show processes from our current session. To show all processes you own (regardless of whether they are part of your current session or not), you can use `ps ux`.
+
+You can kill processes by their PIDs using `kill 1234` where 1234 is a PID. 
+Sometimes however, killing a process does not work instantly. 
+To kill the process in the most hardcore manner possible, use the -9 flag. 
+It’s recommended to kill using without -9 first. 
+This gives a process the chance to clean up child processes, and exit cleanly. 
+However, if a process just isn’t responding, use -9 to kill it instantly.
+
+## Parallel
+
+Submitting a job with more than one processor won't automatically parallelize your job and make it run faster.
+In some cases programs are designed to run on however many cores you make available to them.
+However, if you have written scripts and want to apply them to multiple files in parallel
+you will need to specify this.
+We have seen how you can loop through files in a list.
+Instead of processing files one-at-a-time as with a loop
+we want to process them simultaneous, with each run assigned to a different processor.
+We use the `parallel` program to do this.
+GNU parallel may be able to replace most of your loops and make them run faster by running several jobs in parallel.
+Load `parallel` with `module load parallel`.
+
+Parallel is frequently run by generating the list of items to "loop through"
+and piping this to `parallel` with the command being run.
+For example, if you have a list of 10000 files named
+f0000.txt through f9999.txt you could generate a list of numbers
+from 0000 to 9999 and pipe this to `rm` to delete them.
+
+```seq -w 0 9999 | parallel rm f{}.txt```
+
+The -w flag for `seq` equalize the widths of all numbers by padding with zeros as necessary.
+Each item from the list will be substituted in the curly braces.
+
+In cases where you list files and run a command across all of them,
+the name of the file would substitute for the curly braces.
+Because of this, you often want to remove the extension for the file.
+`{.}` will substitute the file name minus the extension.
+For example ```ls *R | parallel echo {}``` will list all files ending in R,
+while ```ls *py | parallel echo {.}``` will list the names of those files with .R removed.
+
+Alternatively you can specify the iteration values to be parallelized following `:::` at the end of the command.
+
+```
+parallel echo data{}.csv ::: {1..5}
+```
+
+### Quoting in parallel
+
+`parallel` accepts a command to run.
+If that command includes a redirect this would be interpreted by the shell
+rather than by the parallel command
+
+In the following command parallel runs the first part of the command
+with the redirect and the output file interpreted by the shell rather than the parallel command.
+This results in a single file named out{}.txt
+with fives lines of output.
+
+```
+parallel echo data{}.csv > out{}.txt ::: {1..5}
+```
+
+In the following command quotes hold the command together and the entire command is run
+by parallel.
+This results in 5 separate files each with a single output line.
+
+```
+parallel "echo data{}.csv > out{}.txt" ::: {1..5}
+```
+
+Extensive details on `GNU parallel` can be found at https://www.gnu.org/software/parallel/.
+
+Remember to cite the paper if you use this tool: [GNU Parallel: The Command-Line Power Tool](https://www.usenix.org/system/files/login/articles/105438-Tange.pdf).

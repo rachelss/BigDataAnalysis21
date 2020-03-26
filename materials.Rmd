@@ -70,9 +70,42 @@ Read: [Janssens](https://www.datascienceatthecommandline.com/) ch. 4.0-4.2.1 and
 Read: [Janssens](https://www.datascienceatthecommandline.com/) ch. 4.2.2  
 Read: Buffalo ch. 12 (1st part)
 
-### Day 14 3/17
+### Day 14 3/24
 Read: Buffalo ch. 12 (conditionals)  
 
-### Day 15 2/29
+### Day 15 3/26
 [Sed and Awk](https://neurohackweek.github.io/advancedunix/01-first-part/)  
-Read: Buffalo 7 (2nd part), 12 (2nd part)
+Read: Buffalo 7 (2nd part), 12 (2nd part)  
+[Software Carpentry HPC Intro](https://hpc-carpentry.github.io/hpc-intro/)  
+[HPC at URI](https://web.uri.edu/hpc-research-computing/)  
+[HPC materials](hpc.html)
+
+### Day 16 3/31
+HPC
+
+### Day 17 4/2
+Git
+
+### Day 18 4/7
+Git
+
+### Day 19 4/9
+Python
+
+### Day 20 4/14
+Python
+
+### Day 21 4/16
+Python
+
+### Day 22 4/21
+Python
+
+### Day 23 4/23
+Python
+
+### Day 24 4/28
+Python
+
+
+
