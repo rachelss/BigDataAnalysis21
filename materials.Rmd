@@ -84,14 +84,14 @@ Read: Buffalo ch. 7 (2nd part), ch. 12 (2nd part)
 Read: Buffalo ch. 4; Jansens ch. 8
 
 ### Day 17 4/2
+HPC
+
+### Day 18 4/7
 [Software Carpentry Git Lesson](http://swcarpentry.github.io/git-novice/)  
 Read: Buffalo ch. 5
 
-### Day 18 4/7
-[Git Assignment](assignments/git_assignment.pdf)
-
 ### Day 19 4/9
-Python
+[Git Assignment](assignments/git_assignment.pdf)
 
 ### Day 20 4/14
 Python
