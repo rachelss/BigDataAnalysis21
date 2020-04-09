@@ -84,11 +84,11 @@ Read: Buffalo ch. 7 (2nd part), ch. 12 (2nd part)
 Read: Buffalo ch. 4; Jansens ch. 8
 
 ### Day 17 4/2
-Git  
+[Software Carpentry Git Lesson](http://swcarpentry.github.io/git-novice/)  
 Read: Buffalo ch. 5
 
 ### Day 18 4/7
-Git
+[Git Assignment](assignments/git_assignment.pdf)
 
 ### Day 19 4/9
 Python
