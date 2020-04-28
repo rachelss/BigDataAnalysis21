@@ -97,16 +97,18 @@ Read: Buffalo ch. 5
 Read: A Whirlwind Tour of Python p. 8-34; 37-39
 
 ### Day 21 4/16
-Read: A Whirlwind Tour of Python p. 42-43
+Read: A Whirlwind Tour of Python p. 42-43, 52-54
+Read: Python Data Science Handbook ch. 4
 
 ### Day 22 4/21
-Python
+Read: Python Data Science Handbook ch. 3
 
 ### Day 23 4/23
-Python
+Read: A Whirlwind Tour of Python p. 35-36
 
 ### Day 24 4/28
-Python
+[Testing scripts](http://katyhuff.github.io/python-testing/)  
+Read: Effective computation in physics ch. 18
 
 
 
