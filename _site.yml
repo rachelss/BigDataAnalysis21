@@ -1,15 +1,7 @@
-name: "BIO/DSP 439/539 URI Spring 2020"
+name: "BIO/DSP 439/539 URI Spring 2021"
 output_dir: "."
 navbar:
-  title: "BIO/DSP 439/539 URI Spring 2020"
+  title: "BIO/DSP 439/539 URI Spring 2021"
   left:
     - text: "Overview"
       href: index.html
-    - text: "About"
-      href: details.html
-    - text: "Policies"
-      href: policies.html
-    - text: "Schedule"
-      href: schedule.html
-    - text: "Daily materials"
-      href: materials.html
