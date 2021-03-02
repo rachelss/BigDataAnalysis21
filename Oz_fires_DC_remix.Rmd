@@ -17,6 +17,8 @@ Note that this lesson is adapted from the [Data Carpentry Ecology Lesson](https:
 ```{r pack, warning=FALSE}
 #install.packages("tidyverse")
 library(tidyverse)
+library(moderndive)
+library(modelr)
 ```
 
 ## Get the Data
@@ -965,32 +967,11 @@ mm_to_inches <- function(mm){
 
 When you have functions you plan to reuse, I recommend putting them in a separate R script and then using `source` to import those functions for use in your analysis script.
 
-## Mapping functions to data to avoid copy-paste
+## Modeling the influences on temperature
 
-We want to apply a function repeatedly to different portions of our data.
-For example we can look at whether the average maximum temperature is increasing over
-time, but rather than looking at all data we might want to separate by month.
-For example, are January temperatures increasing? are Feburary temperatures increasing? etc.
-We can look at this with a plot.
-
-```{r}
-monthly_temps  %>%
-  ggplot(aes(year, avg_temp, color = factor(month))) + 
-    geom_point() + geom_smooth(method = "lm", se = FALSE) 
-```
-
-We can calculate a linear regression for temperature as a function of year,
-but not with months separately.
-
-```{r}
-monthly_temps %>% 
-  lm(avg_temp ~ year, data = .) %>% summary() 
-
-monthly_temps %>% 
-  lm(avg_temp ~ year+month, data = .) %>% summary() 
-```
-
-This has a very low Rsquared value because so much of the variation is due to differences across months.
+We are likely interested in whether temperature is increasing over time.
+Let's start by looking at a basic plot.
+Remember that we generated a summary table for the monthly average temperature to smooth out some of the daily ups and downs.
 
 ```{r}
 monthly_temps  %>%
@@ -998,17 +979,128 @@ monthly_temps  %>%
     geom_point() + geom_smooth(method = "lm", se = FALSE) 
 ```
 
-However, if we want to get the linear model for each month separately
-we would repeat the same calculation 12 times.
+We can calculate a linear regression for temperature as a function of year
+to understand what this line is telling us.
+
+```{r}
+model_temp_year <- lm(avg_temp ~ year, data = monthly_temps)
+```
+
+You can view the results with the complete output or as a table.
+
+```{r}
+summary(model_temp_year)
+get_regression_table(model_temp_year)
+```
+
+Based on the graph and the model it looks like the average temperature is increasing over time.
+There seems to be a positive slope and the p value is very small so the relationship is significant.
+But there is a lot of variation around the line and our R-squared value is very small.
+That means that the year only explains a small amount of the variation in the temperature.
+We know that some of this variation is due to different temperatures in different cities and different times of year.
+Let's make our plot show this information.
+
+```{r}
+monthly_temps <- temperature %>%
+  filter(!is.na(temperature)) %>%
+  mutate(year = year(date), month = factor(month(date))) %>%
+  group_by(month, year, city_name) %>%
+  summarize(avg_temp = mean(temperature, na.rm = T)) 
+
+monthly_temps  %>%
+  ggplot(aes(year, avg_temp, color = factor(month))) + 
+    facet_wrap(~city_name) + 
+    geom_point() + geom_smooth(method = "lm", se = FALSE) 
+```
+
+Now we can see the differences among months and cities.
+We can see how much influence the month has by using this as the explanatory variable.
+
+```{r}
+model_temp_month <- lm(avg_temp ~ month, data = monthly_temps)
+summary(model_temp_month)
+```
+
+As we saw in our graph, the time of year explains a lot of the variation in the temperature.
+Categorical variables can be a little harder to understand as explanatory variables.
+The intercept shows the mean value for month 1.
+Each subsequent Estimate shows the difference in the mean from month 1.
+We can look at the p value to determine whether these differences are significant.
+
+Now that we have a model predicting what each of our data points should be based on the month,
+we can use this prediction to see how each of our observations differs from the prediction.
+These are our residuals.
+The residuals are the variation that is left when accounting for how temperature differs among months.
+Our next job is to understanding how our other explanatory variables explain this remaining variation.
+To look at this remaining variation we add the residuals to our data frame and then build a new model.
+We can start by looking at how the location (city) explains the variation in temperature.
+First we can plot the residuals.
+
+```{r}
+monthly_temps <- monthly_temps %>% 
+  add_residuals(model_temp_month)
+
+monthly_temps %>% 
+  ggplot(aes(year, resid, color = city_name)) + facet_wrap(~month) +
+  geom_ref_line(h = 0) + 
+  geom_line()
+```
+
+We have removed the influence of month, but we can clearly see the influence of city.
+Let's model the explanatory power of location on the remaining variation.
+
+```{r}
+model_temp_city <- lm(resid ~ city_name, data = monthly_temps)
+summary(model_temp_city)
+```
+
+The effect of city is statistically significant and the R-squared value shows this explanatory variable has substantial power for the variation we observe.
+
+Repeat this process to understand how the Year affects the remaining variation.
+
+```{r}
+monthly_temps <- monthly_temps %>% 
+  add_residuals(model_temp_city)
+
+monthly_temps %>% 
+  ggplot(aes(year, resid, color = city_name)) + facet_wrap(~month) +
+  geom_ref_line(h = 0) + 
+  geom_line()
+
+model_temp_year <- lm(resid ~ year, data = monthly_temps)
+summary(model_temp_year)
+```
+
+It looks like Year has a significant influence on the temperature but doesn't explain a lot of the variation.
+
+Alternatively, we can look at the model including all explanatory variables directly.
+
+```{r}
+model_full <- lm(avg_temp ~ year + month + city_name, data = monthly_temps)
+summary(model_full)
+```
+
+The full model explains most of the variation in the data,
+although here it is difficult to pick out the influence of each variable separately.
+
+Now try repeating this process for rainfall.
+Note that some cities have more than one station.
+It appears that there is a lot more stochasticity in rainfall and it doesn't appear to be changing over time.
+
+## Repeating functions for different parts of your data
+
+Imagine we wanted to get the linear model (temperature as a function of year) for each month separately.
+We would need to repeat the linear model 12 times.
 
 Here's the plot and model for January.
 
-```{r}
+```{r map1}
 monthly_temps %>% filter(month == 1) %>%
-  ggplot(aes(year, avg_temp)) + geom_point() + geom_smooth(method = "lm", se = FALSE) 
+ggplot(aes(year, avg_temp)) + geom_point() + geom_smooth(method = "lm", se = FALSE) 
 
 model_Jan <- monthly_temps %>% filter(month == 1) %>%
-  lm(avg_temp ~ year, data = .) %>% summary() 
+  lm(avg_temp ~ year, data = .)
+summary(model_Jan)
 
 model_Jan %>% broom::tidy()
 model_Jan$r.squared
@@ -1020,7 +1112,7 @@ This looks like `map(YOUR_LIST, YOUR_FUNCTION)`.
 Note: when you see `.` it refers to the data being piped in.
 Note 2: `split` takes a vector to split the data by and is a base function that doesn't automatically infer that the variable is a column from the data
 
-```{r}
+```{r map2}
 models_changing_temp <- monthly_temps %>%
   split(.$month) %>%
   map(~lm(avg_temp ~ year, data = .)) %>%
@@ -1036,42 +1128,17 @@ Click on the variable in the environment to take a look.
 This provides a lot of information to sort through.
 We use `map_dbl` to map a request to access the r squared value from the model summary, and set the output to a double value. Note this can return a vector because you know the (single) type of the data. 
 
-```{r}
+```{r map3}
 models_changing_temp %>% 
   map_dbl("r.squared")
 ```
 Now we use `map_dfr` to map and set the output to a data frame.
 
-```{r}
+```{r map4}
 models_changing_temp %>% 
   map_dfr("r.squared")
 ```
 
-To get the coefficients of the model we use the `tidy` function from `broom`.
-For one model this looks like:
 
-```{r}
-library(broom)
-models_changing_temp[[1]] %>% 
-  tidy() 
-```
-
-For all 12 models again we use `map`.
-
-```{r}
-models_changing_temp %>% 
-  map_dfr(tidy, .id = 'month') 
-```
-
-`.id` provides a variable with the specified name in the output dataframe based on the index of the input data frame.
-
-We can put the coefficients and the Rsquared in the same data frame as well.
-
-```{r}
-models_changing_temp %>% 
-  map_dfr(tidy, .id = 'month') %>%
-  filter(term == 'year') %>% select(-term) %>%
-  mutate(r_squared = map_dbl(models_changing_temp,"r.squared"))
-```
 
 
